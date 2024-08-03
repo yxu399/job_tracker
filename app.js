@@ -51,6 +51,10 @@ function setupRoutes() {
     });
 }
 
+app.use(function(req, res, next) {
+    res.status(404).send("Sorry, that page doesn't exist!");
+  });
+
 // Call the function to set up the routes
 setupRoutes();
 /*

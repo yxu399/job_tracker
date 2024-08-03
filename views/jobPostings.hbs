@@ -1,16 +1,18 @@
+{{!-- jobPostings.hbs --}}
 <head>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
 </head>
 
-<h1>Job Postings</h1>
+{{!-- NavBar --}}
 <nav class="navbar navbar-expand navbar-light" style="background-color: #e3f2fd;">
   <div class="container-fluid">
     <ul class="navbar-nav me-auto mb-2 mb-lg-0">
       <li class="nav-item">
-        <a class="nav-link active" href="/">Home</a>
+        <a class="nav-link" href="/">Home</a>
       </li>
       <li class="nav-item">
-        <a class="nav-link" aria-current="page" href="/jobPostings">Job Postings</a>
+        <a class="nav-link active" aria-current="page" href="/jobPostings">Job Postings</a>
       </li>
       <li class="nav-item">
         <a class="nav-link" href="/companies">Companies</a>
@@ -45,47 +47,108 @@
 </form>
 </nav>
 
-{{!-- ----------------------------------------------------------------------------- --}}
-
-<table id="job-postings-table">
-    {{!-- Header section --}}
-    <thead>
-        <tr>
-            {{#each data.[0]}}
-            <th>
-                {{@key}}
-            </th>
-            {{/each}}
-            <th>Edit</th>
-            <th>Delete</th>
-        </tr>
-    </thead>
-    {{!-- Body section --}}
-    <tbody>
-        {{#each data}}
-        <tr>
-            <td>{{this.idPosting}}</td>
-            <td>{{this.idCompany}}</td>
-            <td>{{this.idRole}}</td>
-            <td>{{this.jobTitle}}</td>
-            <td>{{this.datePosted}}</td>
-            <td>{{this.dateApplied}}</td>
-            <td>{{this.status}}</td>
-            <td>{{this.description}}</td>
-            <td>{{this.annualSalary}}</td>
-            <td>{{this.salaryCurrency}}</td>
-            <td>{{this.location}}</td>
-            <td>{{this.workMode}}</td>
-            <td><button onclick="editJobPosting({{this.idPosting}})">Edit</button></td>
-            <td><button onclick="deleteJobPosting({{this.idPosting}})">Delete</button></td>
-        </tr>
-        {{/each}}
-    </tbody>
-</table>
+{{!-- database table --}}
+<div class="custom-table-responsive">
+  <table id="job-postings-table" class="custom-table custom-table-bordered custom-table-striped custom-table-hover">
+      <caption>List of Job Postings</caption>
+      {{!-- Header section --}}
+      <thead>
+          <tr>
+              <th>ID</th>
+              <th>Company</th>
+              <th>Role</th>
+              <th>Job Title</th>
+              <th>Date Posted</th>
+              <th>Date Applied</th>
+              <th>Status</th>
+              <th>Description</th>
+              <th>Annual Salary</th>
+              <th>Salary Currency</th>
+              <th>Location</th>
+              <th>Work Mode</th>
+              <th>Edit</th>
+              <th>Delete</th>
+          </tr>
+      </thead>
+      {{!-- Body section --}}
+      {{!-- Body section --}}
+<tbody>
+    {{#each data}}
+    <tr id="row-{{this.idPosting}}">
+        <td>{{this.idPosting}}</td>
+        <td class="editable" data-field="companyName">
+            <span class="view-mode">{{this.companyName}}</span>
+            <select class="edit-mode form-control" style="display: none;">
+                {{#each ../companies}}
+                <option value="{{this.idCompany}}">{{this.companyName}}</option>
+                {{/each}}
+            </select>
+        </td>
+        <td class="editable" data-field="role">
+            <span class="view-mode">{{this.role}}</span>
+            <select class="edit-mode form-control" style="display: none;">
+                <option value="">Select a Role (Optional)</option>
+                {{#each ../roles}}
+                <option value="{{this.idRole}}">{{this.role}}</option>
+                {{/each}}
+            </select>
+        </td>
+        <td class="editable" data-field="jobTitle">
+            <span class="view-mode">{{this.jobTitle}}</span>
+            <input type="text" class="edit-mode form-control" value="{{this.jobTitle}}" style="display: none;">
+        </td>
+        <td class="editable" data-field="datePosted">
+            <span class="view-mode">{{this.datePosted}}</span>
+            <input type="date" class="edit-mode form-control" value="{{this.datePosted}}" style="display: none;">
+        </td>
+        <td class="editable" data-field="dateApplied">
+            <span class="view-mode">{{this.dateApplied}}</span>
+            <input type="date" class="edit-mode form-control" value="{{this.dateApplied}}" style="display: none;">
+        </td>
+        <td class="editable" data-field="status">
+            <span class="view-mode">{{this.status}}</span>
+            <select class="edit-mode form-control" style="display: none;">
+                <option value="Under Review">Under Review</option>
+                <option value="Interview Scheduled">Interview Scheduled</option>
+                <option value="Applied">Applied</option>
+                <option value="Rejected">Rejected</option>
+                <option value="Offer Extended">Offer Extended</option>
+            </select>
+        </td>
+        <td class="editable" data-field="description">
+            <span class="view-mode">{{this.description}}</span>
+            <textarea class="edit-mode form-control" style="display: none;">{{this.description}}</textarea>
+        </td>
+        <td class="editable" data-field="annualSalary">
+            <span class="view-mode">{{this.annualSalary}}</span>
+            <input type="number" step="0.01" class="edit-mode form-control" value="{{this.annualSalary}}" style="display: none;">
+        </td>
+        <td class="editable" data-field="salaryCurrency">
+            <span class="view-mode">{{this.salaryCurrency}}</span>
+            <input type="text" class="edit-mode form-control" value="{{this.salaryCurrency}}" style="display: none;">
+        </td>
+        <td class="editable" data-field="location">
+            <span class="view-mode">{{this.location}}</span>
+            <input type="text" class="edit-mode form-control" value="{{this.location}}" style="display: none;">
+        </td>
+        <td class="editable" data-field="workMode">
+            <span class="view-mode">{{this.workMode}}</span>
+            <input type="text" class="edit-mode form-control" value="{{this.workMode}}" style="display: none;">
+        </td>
+        <td>
+            <button class="btn btn-primary btn-sm edit-btn" data-id="{{this.idPosting}}">Edit</button>
+            <button class="btn btn-success btn-sm save-btn" style="display: none;" data-id="{{this.idPosting}}">Save</button>
+            <button class="btn btn-secondary btn-sm cancel-btn" style="display: none;" data-id="{{this.idPosting}}">Cancel</button>
+        </td>
+        <td><button class="btn btn-danger btn-sm" onclick="deleteJobPosting({{this.idPosting}})">Delete</button></td>
+    </tr>
+    {{/each}}
+</tbody>
+  </table>
+</div>
 
 <script src="/js/delete_job_posting.js"></script>
 
-{{!-- ----------------------------------------------------------------------------- --}}
 {{!-- Form to add a record to the table  --}}
 <h2>Add Job Posting with AJAX</h2>
 <p>To add a new person, please enter their information below and click 'Submit'!</p>
@@ -149,9 +212,8 @@
 
 {{!-- ----------------------------------------------------------------------------- --}}
 
-{{!-- ----------------------------------------------------------------------------- --}}
 
-<h2>Update Job Posting</h2>
+{{!-- <h2>Update Job Posting</h2>
 <p>To update a specific job posting, select it from the drop-down menu on the left and modify the details on the right</p>
 <form id="update-job-posting-form-ajax">
     <label for="input-jobPosting">Select Job Posting: </label>
@@ -213,6 +275,66 @@
     <input type="text" name="input-workMode-update" id="input-workMode-update">
 
     <input type="submit" value="Update Job Posting">
-</form>
+</form> --}}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const table = document.getElementById('job-postings-table');
+
+    table.addEventListener('click', function(e) {
+        if (e.target.classList.contains('edit-btn')) {
+            const row = e.target.closest('tr');
+            toggleEditMode(row, true);
+        } else if (e.target.classList.contains('save-btn')) {
+            const row = e.target.closest('tr');
+            saveChanges(row);
+        } else if (e.target.classList.contains('cancel-btn')) {
+            const row = e.target.closest('tr');
+            toggleEditMode(row, false);
+        }
+    });
+
+    function toggleEditMode(row, isEdit) {
+        const editables = row.querySelectorAll('.editable');
+        editables.forEach(td => {
+            td.querySelector('.view-mode').style.display = isEdit ? 'none' : '';
+            td.querySelector('.edit-mode').style.display = isEdit ? '' : 'none';
+        });
+        row.querySelector('.edit-btn').style.display = isEdit ? 'none' : '';
+        row.querySelector('.save-btn').style.display = isEdit ? '' : 'none';
+        row.querySelector('.cancel-btn').style.display = isEdit ? '' : 'none';
+    }
+
+    function saveChanges(row) {
+        const id = row.id.split('-')[1];
+        const data = {
+            idPosting: id
+        };
+
+        row.querySelectorAll('.editable').forEach(td => {
+            const field = td.dataset.field;
+            const editElem = td.querySelector('.edit-mode');
+            data[field] = editElem.value;
+        });
+
+        // Send AJAX request to update the data
+        var xhttp = new XMLHttpRequest();
+        xhttp.open("PUT", "/update-job-posting", true);
+        xhttp.setRequestHeader("Content-type", "application/json");
+
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                const updatedData = JSON.parse(this.responseText);
+                updateRow(updatedData);
+                toggleEditMode(row, false);
+            } else if (this.readyState == 4) {
+                console.log("There was an error with the update.");
+            }
+        };
+
+        xhttp.send(JSON.stringify(data));
+    }
+});
+</script>
 
 <script src="/js/update_job_posting.js"></script>
