@@ -68,19 +68,19 @@ router.get('/', function(req, res) {
                     return;
                 }
                 
-                // convert date format Month name DD YYY
-                const formatDate = (dateString) => {
-                    const date = new Date(dateString);
-                    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-                };
+                // // convert date format Month name DD YYY
+                // const formatDate = (dateString) => {
+                //     const date = new Date(dateString);
+                //     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                // };
                 
-                // query callback:
-                jobPostings = jobPostings.map(posting => ({
-                    ...posting,
-                    datePosted: formatDate(posting.datePosted),
-                    dateApplied: formatDate(posting.dateApplied)
-                }));
-
+                // // query callback:
+                // jobPostings = jobPostings.map(posting => ({
+                //     ...posting,
+                //     datePosted: formatDate(posting.datePosted),
+                //     dateApplied: formatDate(posting.dateApplied)
+                // }));
+                console.log("Job Postings:", jobPostings);
                 res.render('jobPostings', {
                     data: jobPostings, 
                     companies: companies,
@@ -187,84 +187,78 @@ router.delete('/delete-job-posting/', function(req,res,next){
 
 // ------------------------------------------------------------------------------------------
 
-router.put('/update-job-posting', function(req, res, next) {
+router.put('/put-job-posting-ajax', function(req, res, next){
     let data = req.body;
-    
-    // First, get the company ID and role ID (if role is provided)
-    let getIdsQuery = `
-        SELECT c.idCompany, r.idRole 
-        FROM Companies c 
-        LEFT JOIN Roles r ON r.role = ?
-        WHERE c.companyName = ?
-    `;
-    
-    db.pool.query(getIdsQuery, [data.roleName || null, data.companyName], function(error, results) {
-        if (error) {
+  
+    // Parse integer values
+    let idPosting = parseInt(data.idPosting);
+    let idCompany = parseInt(data.idCompany) || null;
+    let idRole = parseInt(data.idRole) || null;
+    let annualSalary = parseFloat(data.annualSalary) || null;
+
+    // Validate date fields
+    let datePosted = data.datePosted ? new Date(data.datePosted) : null;
+    let dateApplied = data.dateApplied ? new Date(data.dateApplied) : null;
+
+    // Other fields are at least empty strings if not provided
+    let jobTitle = data.jobTitle || '';
+    let status = data.status || '';
+    let description = data.description || '';
+    let salaryCurrency = data.salaryCurrency || '';
+    let location = data.location || '';
+    let workMode = data.workMode || '';
+  
+    // Prepare the update query
+    let queryUpdateJobPosting = `UPDATE JobPostings SET 
+      idCompany = ?, 
+      idRole = ?, 
+      jobTitle = ?,
+      datePosted = ?, 
+      dateApplied = ?, 
+      status = ?,
+      description = ?,
+      annualSalary = ?,
+      salaryCurrency = ?,
+      location = ?,
+      workMode = ?
+      WHERE idPosting = ?`;
+  
+    // // Prepare the select query to get updated data
+    // let selectJobPosting = `
+    //   SELECT jp.*, c.companyName, r.role 
+    //   FROM JobPostings jp
+    //   LEFT JOIN Companies c ON jp.idCompany = c.idCompany
+    //   LEFT JOIN Roles r ON jp.idRole = r.idRole
+    //   WHERE jp.idPosting = ?`;
+  
+    // Run the update query
+    db.pool.query(queryUpdateJobPosting, 
+        [idCompany, idRole, data.jobTitle, data.datePosted, data.dateApplied, 
+         data.status, data.description, annualSalary, data.salaryCurrency, 
+         data.location, data.workMode, idPosting], 
+        function(error, result){
+          if (error) {
             console.log(error);
-            res.status(500).json({ error: "Error fetching company and role IDs" });
-            return;
-        }
-        
-        let idCompany = results[0] ? results[0].idCompany : null;
-        let idRole = data.roleName ? (results[0] ? results[0].idRole : null) : null;
-
-        // Now update the job posting
-        let updateQuery = `
-            UPDATE JobPostings 
-            SET idCompany = ?, 
-                idRole = ?, 
-                jobTitle = ?, 
-                datePosted = ?, 
-                dateApplied = ?, 
-                status = ?, 
-                description = ?, 
-                annualSalary = ?, 
-                salaryCurrency = ?, 
-                location = ?, 
-                workMode = ?
-            WHERE idPosting = ?
-        `;
-
-        let values = [
-            idCompany,
-            idRole,
-            data.jobTitle,
-            data.datePosted || null,
-            data.dateApplied || null,
-            data.status,
-            data.description,
-            data.annualSalary || null,
-            data.salaryCurrency,
-            data.location,
-            data.workMode,
-            data.idPosting
-        ];
-
-        db.pool.query(updateQuery, values, function(error, result) {
-            if (error) {
+            res.status(400).json({ error: error.message });
+          } else {
+            // If there was no error, fetch the updated data
+            let selectQuery = `
+              SELECT jp.*, c.companyName, r.role 
+              FROM JobPostings jp
+              LEFT JOIN Companies c ON jp.idCompany = c.idCompany
+              LEFT JOIN Roles r ON jp.idRole = r.idRole
+              WHERE jp.idPosting = ?`;
+            
+            db.pool.query(selectQuery, [idPosting], function(error, rows) {
+              if (error) {
                 console.log(error);
-                res.status(500).json({ error: "Error updating job posting" });
-            } else {
-                // If update was successful, fetch the updated job posting
-                let getUpdatedPostingQuery = `
-                    SELECT jp.*, c.companyName, r.role as roleName
-                    FROM JobPostings jp
-                    LEFT JOIN Companies c ON jp.idCompany = c.idCompany
-                    LEFT JOIN Roles r ON jp.idRole = r.idRole
-                    WHERE jp.idPosting = ?
-                `;
-                
-                db.pool.query(getUpdatedPostingQuery, [data.idPosting], function(error, results) {
-                    if (error) {
-                        console.log(error);
-                        res.status(500).json({ error: "Error fetching updated job posting" });
-                    } else {
-                        res.status(200).json(results[0]);
-                    }
-                });
-            }
-        });
-    });
-});
+                res.status(400).json({ error: error.message });
+              } else {
+                res.json(rows[0]); // Send back the updated job posting data
+              }
+            });
+          }
+      });
+  });
 
 module.exports = router;

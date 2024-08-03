@@ -1,7 +1,3 @@
-/*
-    SETUP
-*/
-
 // Express
 const express = require('express');
 const app = express();
@@ -13,50 +9,43 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 PORT = 9191;
 
-// Load route modules
-// const companiesRoutes = require('./routes/companiesRoutes');
-const jobPostingsRoutes = require('./routes/jobPostingsRoutes');
-// const postingsSkillsRoutes = require('./routes/postingsSkillsRoutes');
-// const rolesRoutes = require('./routes/rolesRoutes');
-// const skillPlansRoutes = require('./routes/skillPlansRoutes');
-// const skillsRoutes = require('./routes/skillsRoutes');
-
 // Handlebars
 const { engine } = require('express-handlebars');
-var exphbs = require('express-handlebars');     // Import express-handlebars
-app.engine('.hbs', exphbs.engine({extname: '.hbs'}));  // Create an instance of the handlebars engine to process templates
-app.set('view engine', '.hbs');                 // Tell express to use the handlebars engine whenever it encounters a *.hbs file.
+var exphbs = require('express-handlebars');
+app.engine('.hbs', exphbs.engine({extname: '.hbs'}));
+app.set('view engine', '.hbs');
 
+// Load route modules
+const jobPostingsRoutes = require('./routes/jobPostingsRoutes');
 
 /*
     ROUTES
 */
-// Set up routes
 function setupRoutes() {
-    // app.use('/companies', companiesRoutes);
-    app.use('/jobPostings', jobPostingsRoutes);
-    // app.use('/postingsSkills', postingsSkillsRoutes);
-    // app.use('/roles', rolesRoutes);
-    // app.use('/skillPlans', skillPlansRoutes);
-    // app.use('/skills', skillsRoutes);
-
     // Home route
     app.get('/', (req, res) => {
         res.render('index');
     });
 
-    // 404 Error handler - this should be the last route
+    // Routes to different tables
+    app.use('/jobPostings', jobPostingsRoutes);
+
+
+    // 404 Error handler 
     app.use((req, res, next) => {
         res.status(404).render('404');
     });
+
+    // General error handler
+    app.use((err, req, res, next) => {
+        console.error(err.stack);
+        res.status(500).render('error', { error: err });
+    });
 }
 
-app.use(function(req, res, next) {
-    res.status(404).send("Sorry, that page doesn't exist!");
-  });
-
-// Call the function to set up the routes
+// Set up routes
 setupRoutes();
+
 /*
     LISTENER
 */

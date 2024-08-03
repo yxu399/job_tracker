@@ -47,7 +47,8 @@
 </form>
 </nav>
 
-{{!-- database table --}}
+{{!-- database table---------------------------------------------------------------------------------------------------- --}}
+
 <div class="custom-table-responsive">
   <table id="job-postings-table" class="custom-table custom-table-bordered custom-table-striped custom-table-hover">
       <caption>List of Job Postings</caption>
@@ -71,85 +72,33 @@
           </tr>
       </thead>
       {{!-- Body section --}}
-      {{!-- Body section --}}
-<tbody>
-    {{#each data}}
-    <tr id="row-{{this.idPosting}}">
-        <td>{{this.idPosting}}</td>
-        <td class="editable" data-field="companyName">
-            <span class="view-mode">{{this.companyName}}</span>
-            <select class="edit-mode form-control" style="display: none;">
-                {{#each ../companies}}
-                <option value="{{this.idCompany}}">{{this.companyName}}</option>
-                {{/each}}
-            </select>
-        </td>
-        <td class="editable" data-field="role">
-            <span class="view-mode">{{this.role}}</span>
-            <select class="edit-mode form-control" style="display: none;">
-                <option value="">Select a Role (Optional)</option>
-                {{#each ../roles}}
-                <option value="{{this.idRole}}">{{this.role}}</option>
-                {{/each}}
-            </select>
-        </td>
-        <td class="editable" data-field="jobTitle">
-            <span class="view-mode">{{this.jobTitle}}</span>
-            <input type="text" class="edit-mode form-control" value="{{this.jobTitle}}" style="display: none;">
-        </td>
-        <td class="editable" data-field="datePosted">
-            <span class="view-mode">{{this.datePosted}}</span>
-            <input type="date" class="edit-mode form-control" value="{{this.datePosted}}" style="display: none;">
-        </td>
-        <td class="editable" data-field="dateApplied">
-            <span class="view-mode">{{this.dateApplied}}</span>
-            <input type="date" class="edit-mode form-control" value="{{this.dateApplied}}" style="display: none;">
-        </td>
-        <td class="editable" data-field="status">
-            <span class="view-mode">{{this.status}}</span>
-            <select class="edit-mode form-control" style="display: none;">
-                <option value="Under Review">Under Review</option>
-                <option value="Interview Scheduled">Interview Scheduled</option>
-                <option value="Applied">Applied</option>
-                <option value="Rejected">Rejected</option>
-                <option value="Offer Extended">Offer Extended</option>
-            </select>
-        </td>
-        <td class="editable" data-field="description">
-            <span class="view-mode">{{this.description}}</span>
-            <textarea class="edit-mode form-control" style="display: none;">{{this.description}}</textarea>
-        </td>
-        <td class="editable" data-field="annualSalary">
-            <span class="view-mode">{{this.annualSalary}}</span>
-            <input type="number" step="0.01" class="edit-mode form-control" value="{{this.annualSalary}}" style="display: none;">
-        </td>
-        <td class="editable" data-field="salaryCurrency">
-            <span class="view-mode">{{this.salaryCurrency}}</span>
-            <input type="text" class="edit-mode form-control" value="{{this.salaryCurrency}}" style="display: none;">
-        </td>
-        <td class="editable" data-field="location">
-            <span class="view-mode">{{this.location}}</span>
-            <input type="text" class="edit-mode form-control" value="{{this.location}}" style="display: none;">
-        </td>
-        <td class="editable" data-field="workMode">
-            <span class="view-mode">{{this.workMode}}</span>
-            <input type="text" class="edit-mode form-control" value="{{this.workMode}}" style="display: none;">
-        </td>
-        <td>
-            <button class="btn btn-primary btn-sm edit-btn" data-id="{{this.idPosting}}">Edit</button>
-            <button class="btn btn-success btn-sm save-btn" style="display: none;" data-id="{{this.idPosting}}">Save</button>
-            <button class="btn btn-secondary btn-sm cancel-btn" style="display: none;" data-id="{{this.idPosting}}">Cancel</button>
-        </td>
-        <td><button class="btn btn-danger btn-sm" onclick="deleteJobPosting({{this.idPosting}})">Delete</button></td>
-    </tr>
-    {{/each}}
-</tbody>
+      <tbody>
+          {{#each data}}
+          <tr>
+              <td>{{this.idPosting}}</td>
+              <td>{{this.companyName}}</td>
+              <td>{{this.role}}</td>
+              <td>{{this.jobTitle}}</td>
+              <td>{{this.datePosted}}</td>
+              <td>{{this.dateApplied}}</td>
+              <td>{{this.status}}</td>
+              <td>{{this.description}}</td>
+              <td>{{this.annualSalary}}</td>
+              <td>{{this.salaryCurrency}}</td>
+              <td>{{this.location}}</td>
+              <td>{{this.workMode}}</td>
+              <td><button class="btn btn-primary btn-sm" onclick="editJobPosting({{this.idPosting}})">Edit</button></td>
+              <td><button class="btn btn-danger btn-sm" onclick="deleteJobPosting({{this.idPosting}})">Delete</button></td>
+          </tr>
+          {{/each}}
+      </tbody>
   </table>
 </div>
 
 <script src="/js/delete_job_posting.js"></script>
 
-{{!-- Form to add a record to the table  --}}
+{{!-- Form to add a record to the table  -----------------------------------------------------}}
+
 <h2>Add Job Posting with AJAX</h2>
 <p>To add a new person, please enter their information below and click 'Submit'!</p>
 <form id="add-job-posting-form-ajax">
@@ -210,89 +159,94 @@
 {{!-- Embed our javascript to handle the DOM manipulation and AJAX request --}}
 <script src="/js/add_job_posting.js"></script>
 
-{{!-- ----------------------------------------------------------------------------- --}}
+{{!-- Update a job posting----------------------------------------------------------------------------- --}}
 
-
-{{!-- <h2>Update Job Posting</h2>
-<p>To update a specific job posting, select it from the drop-down menu on the left and modify the details on the right</p>
+<h2>Update Job Posting</h2>
+<p>To update a specific job posting, select the job title from the drop-down menu on the left and update the details on the right.</p>
 <form id="update-job-posting-form-ajax">
-    <label for="input-jobPosting">Select Job Posting: </label>
-    <select name="input-jobPosting" id="mySelect">
+    <label for="input-job-title">Job Title: </label>
+    <select name="input-job-title" id="job-posting-select">
         <option value="">Select a Job Posting</option>
         {{#each data}}
         <option value="{{this.idPosting}}">{{this.jobTitle}} at {{this.companyName}}</option>
         {{/each}}
     </select>
 
-    <label for="input-idCompany-update">Company: </label>
-    <select name="input-idCompany-update" id="input-idCompany-update">
+    <label for="input-company">Company: </label>
+    <select name="input-company" id="input-company-update">
         <option value="">Select a Company</option>
         {{#each companies}}
         <option value="{{this.idCompany}}">{{this.companyName}}</option>
         {{/each}}
     </select>
 
-    <label for="input-idRole-update">Role: </label>
-    <select name="input-idRole-update" id="input-idRole-update">
-        <option value="">Select a Role (Optional)</option>
+    <label for="input-role">Role: </label>
+    <select name="input-role" id="input-role-update">
+        <option value="">Select a Role</option>
         {{#each roles}}
         <option value="{{this.idRole}}">{{this.role}}</option>
         {{/each}}
     </select>
 
-    <label for="input-jobTitle-update">Job Title: </label>
-    <input type="text" name="input-jobTitle-update" id="input-jobTitle-update" required>
+    <label for="input-job-title">Job Title: </label>
+    <input type="text" id="input-job-title-update" name="jobTitle">
 
-    <label for="input-datePosted-update">Date Posted: </label>
-    <input type="date" name="input-datePosted-update" id="input-datePosted-update">
+    <label for="input-date-posted">Date Posted: </label>
+    <input type="date" name="input-date-posted" id="input-date-posted-update">
 
-    <label for="input-dateApplied-update">Date Applied: </label>
-    <input type="date" name="input-dateApplied-update" id="input-dateApplied-update">
+    <label for="input-date-applied">Date Applied: </label>
+    <input type="date" name="input-date-applied" id="input-date-applied-update">
 
-    <label for="input-status-update">Status: </label>
-    <select name="input-status-update" id="input-status-update" required>
+    <label for="input-status">Status: </label>
+    <select name="input-status" id="input-status-update">
         <option value="">Select Status</option>
-        <option value="Under Review">Under Review</option>
-        <option value="Interview Scheduled">Interview Scheduled</option>
         <option value="Applied">Applied</option>
+        <option value="Interviewing">Interviewing</option>
+        <option value="Offered">Offered</option>
         <option value="Rejected">Rejected</option>
-        <option value="Offer Extended">Offer Extended</option>
     </select>
 
-    <label for="input-description-update">Description: </label>
-    <textarea name="input-description-update" id="input-description-update"></textarea>
+    <label for="input-description">Description: </label>
+    <textarea name="input-description" id="input-description-update"></textarea>
 
-    <label for="input-annualSalary-update">Annual Salary: </label>
-    <input type="number" step="0.01" name="input-annualSalary-update" id="input-annualSalary-update">
+    <label for="input-annual-salary">Annual Salary: </label>
+    <input type="number" name="input-annual-salary" id="input-annual-salary-update" step="0.01">
 
-    <label for="input-salaryCurrency-update">Salary Currency: </label>
-    <input type="text" name="input-salaryCurrency-update" id="input-salaryCurrency-update">
+    <label for="input-salary-currency">Salary Currency: </label>
+    <input type="text" name="input-salary-currency" id="input-salary-currency-update">
 
-    <label for="input-location-update">Location: </label>
-    <input type="text" name="input-location-update" id="input-location-update">
+    <label for="input-location">Location: </label>
+    <input type="text" name="input-location" id="input-location-update">
 
-    <label for="input-workMode-update">Work Mode: </label>
-    <input type="text" name="input-workMode-update" id="input-workMode-update">
+    <label for="input-work-mode">Work Mode: </label>
+    <input type="text" name="input-work-mode" id="input-work-mode-update">
 
     <input type="submit" value="Update Job Posting">
-</form> --}}
+</form>
+<script src="./js/update_job_posting.js"></script>
 
-<script>
+
+{{!-- <script>
 document.addEventListener('DOMContentLoaded', function() {
     const table = document.getElementById('job-postings-table');
 
-    table.addEventListener('click', function(e) {
-        if (e.target.classList.contains('edit-btn')) {
-            const row = e.target.closest('tr');
-            toggleEditMode(row, true);
-        } else if (e.target.classList.contains('save-btn')) {
-            const row = e.target.closest('tr');
-            saveChanges(row);
-        } else if (e.target.classList.contains('cancel-btn')) {
-            const row = e.target.closest('tr');
-            toggleEditMode(row, false);
-        }
-    });
+    if (table) {
+        table.addEventListener('click', function(e) {
+            if (e.target.classList.contains('edit-btn')) {
+                const row = e.target.closest('tr');
+                toggleEditMode(row, true);
+            } else if (e.target.classList.contains('save-btn')) {
+                const row = e.target.closest('tr');
+                saveChanges(row);
+            } else if (e.target.classList.contains('cancel-btn')) {
+                const row = e.target.closest('tr');
+                toggleEditMode(row, false);
+            }
+        });
+    } else {
+        console.error('Table with id "job-postings-table" not found');
+    }
+});
 
     function toggleEditMode(row, isEdit) {
         const editables = row.querySelectorAll('.editable');
@@ -323,18 +277,54 @@ document.addEventListener('DOMContentLoaded', function() {
         xhttp.setRequestHeader("Content-type", "application/json");
 
         xhttp.onreadystatechange = function() {
-            if (this.readyState == 4 && this.status == 200) {
-                const updatedData = JSON.parse(this.responseText);
-                updateRow(updatedData);
-                toggleEditMode(row, false);
-            } else if (this.readyState == 4) {
-                console.log("There was an error with the update.");
+            if (this.readyState == 4) {
+                if (this.status == 200) {
+                    try {
+                        const updatedData = JSON.parse(this.responseText);
+                        updateRowData(row, updatedData);
+                        toggleEditMode(row, false);
+                    } catch (error) {
+                        console.error("Error parsing response:", error);
+                    }
+                } else {
+                    console.error("Error updating job posting. Status:", this.status);
+                }
             }
         };
 
         xhttp.send(JSON.stringify(data));
     }
+
+    function updateRowData(row, data) {
+        row.querySelectorAll('.editable').forEach(td => {
+            const field = td.dataset.field;
+            const viewElem = td.querySelector('.view-mode');
+            const editElem = td.querySelector('.edit-mode');
+            
+            if (field === 'datePosted' || field === 'dateApplied') {
+                viewElem.textContent = formatDate(data[field], 'display');
+                editElem.value = formatDate(data[field], 'input');
+            } else {
+                viewElem.textContent = data[field];
+                if (editElem.tagName === 'SELECT') {
+                    editElem.value = data[field + 'Id'] || '';  // Assuming the ID field is named like companyId, roleId
+                } else {
+                    editElem.value = data[field];
+                }
+            }
+        });
+    }
+
+    function formatDate(dateString, format = 'display') {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        if (format === 'input') {
+            return date.toISOString().split('T')[0];
+        } else {
+            return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+        }
+    }
 });
 </script>
 
-<script src="/js/update_job_posting.js"></script>
+<script src="/js/update_job_posting.js"></script> --}}

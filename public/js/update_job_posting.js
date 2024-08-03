@@ -3,84 +3,136 @@ let updateJobPostingForm = document.getElementById('update-job-posting-form-ajax
 
 // Modify the objects we need
 updateJobPostingForm.addEventListener("submit", function (e) {
+   
+    // Prevent the form from submitting
     e.preventDefault();
 
-    let formData = new FormData(this);
-    let data = Object.fromEntries(formData);
+    // Get form fields we need to get data from
+    let inputJobPosting = document.getElementById("job-posting-select");
+    let inputCompany = document.getElementById("input-company-update");
+    let inputRole = document.getElementById("input-role-update");
+    let inputJobTitle = document.getElementById("input-job-title-update");
+    let inputDatePosted = document.getElementById("input-date-posted-update");
+    let inputDateApplied = document.getElementById("input-date-applied-update");
+    let inputStatus = document.getElementById("input-status-update");
+    let inputDescription = document.getElementById("input-description-update");
+    let inputAnnualSalary = document.getElementById("input-annual-salary-update");
+    let inputSalaryCurrency = document.getElementById("input-salary-currency-update");
+    let inputLocation = document.getElementById("input-location-update");
+    let inputWorkMode = document.getElementById("input-work-mode-update");
 
-    // Convert dates to ISO format
-    data.datePosted = data.datePosted ? new Date(data.datePosted).toISOString().split('T')[0] : null;
-    data.dateApplied = data.dateApplied ? new Date(data.dateApplied).toISOString().split('T')[0] : null;
+    // Get the values from the form fields
+    let jobPostingValue = inputJobPosting.value;
+    let companyValue = inputCompany.value;
+    let roleValue = inputRole.value;
+    let jobTitleValue = inputJobTitle.value;
+    let datePostedValue = inputDatePosted.value;
+    let dateAppliedValue = inputDateApplied.value;
+    let statusValue = inputStatus.value;
+    let descriptionValue = inputDescription.value;
+    let annualSalaryValue = inputAnnualSalary.value;
+    let salaryCurrencyValue = inputSalaryCurrency.value;
+    let locationValue = inputLocation.value;
+    let workModeValue = inputWorkMode.value;
+
+    // Put our data we want to send in a javascript object
+    let data = {
+        idPosting: jobPostingValue,
+        idCompany: companyValue,
+        idRole: roleValue,
+        jobTitle: jobTitleValue,
+        datePosted: datePostedValue,
+        dateApplied: dateAppliedValue,
+        status: statusValue,
+        description: descriptionValue,
+        annualSalary: annualSalaryValue,
+        salaryCurrency: salaryCurrencyValue,
+        location: locationValue,
+        workMode: workModeValue
+    }
+    
+    console.log("Data being sent to server:", data);
 
     // Setup our AJAX request
     var xhttp = new XMLHttpRequest();
-    xhttp.open("PUT", "/update-job-posting", true);
+    xhttp.open("PUT", "/jobPostings/put-job-posting-ajax", true);
     xhttp.setRequestHeader("Content-type", "application/json");
 
     // Tell our AJAX request how to resolve
     xhttp.onreadystatechange = () => {
-        if (xhttp.readyState == 4 && xhttp.status == 200) {
-            // Update the row with the new data
-            updateRow(JSON.parse(xhttp.response));
-            // Clear the form
-            this.reset();
-        }
-        else if (xhttp.readyState == 4 && xhttp.status != 200) {
-            console.log("There was an error with the input.")
+        if (xhttp.readyState == 4) {
+            console.log("Server response:", xhttp.responseText);
+            if (xhttp.status == 200) {
+                // Add the new data to the table
+                updateRow(xhttp.response, jobPostingValue);
+
+                // Clear the input fields for another transaction
+                inputJobPosting.value = '';
+                inputCompany.value = '';
+                inputRole.value = '';
+                inputJobTitle.value = '';
+                inputDatePosted.value = '';
+                inputDateApplied.value = '';
+                inputStatus.value = '';
+                inputDescription.value = '';
+                inputAnnualSalary.value = '';
+                inputSalaryCurrency.value = '';
+                inputLocation.value = '';
+                inputWorkMode.value = '';
+            }
+            else {
+                console.log("There was an error with the input.")
+            }
         }
     }
 
     // Send the request and wait for the response
     xhttp.send(JSON.stringify(data));
-});
 
-// Function to populate the form with existing data
-function populateForm(data) {
-    document.getElementById("mySelect").value = data.idPosting;
-    document.getElementById("input-idCompany-update").value = data.companyName;
-    document.getElementById("input-idRole-update").value = data.roleName || ''; // Handle null or undefined
-    document.getElementById("input-jobTitle-update").value = data.jobTitle;
-    document.getElementById("input-datePosted-update").value = formatDate(data.datePosted, 'input');
-    document.getElementById("input-dateApplied-update").value = formatDate(data.dateApplied, 'input');
-    document.getElementById("input-status-update").value = data.status;
-    document.getElementById("input-description-update").value = data.description;
-    document.getElementById("input-annualSalary-update").value = data.annualSalary;
-    document.getElementById("input-salaryCurrency-update").value = data.salaryCurrency;
-    document.getElementById("input-location-update").value = data.location;
-    document.getElementById("input-workMode-update").value = data.workMode;
-}
+})
 
-// Function to update a table row with new data
-function updateRow(data) {
-    let parsedData = typeof data === 'string' ? JSON.parse(data) : data;
+function updateRow(data, jobPostingID){
+    let parsedData = JSON.parse(data);
     
+    console.log("Parsed data:", parsedData);
+    console.log("Job Posting ID to update:", jobPostingID);
+
     let table = document.getElementById("job-postings-table");
 
+    if (!table) {
+        console.error("Table with id 'job-postings-table' not found");
+        return;
+    }
+
     for (let i = 0, row; row = table.rows[i]; i++) {
-       if (row.getAttribute("data-value") == parsedData.idPosting) {
-            row.getElementsByTagName("td")[1].textContent = parsedData.companyName;
-            row.getElementsByTagName("td")[2].textContent = parsedData.roleName;
-            row.getElementsByTagName("td")[3].textContent = parsedData.jobTitle;
-            row.getElementsByTagName("td")[4].textContent = formatDate(parsedData.datePosted, 'display');
-            row.getElementsByTagName("td")[5].textContent = formatDate(parsedData.dateApplied, 'display');
-            row.getElementsByTagName("td")[6].textContent = parsedData.status;
-            row.getElementsByTagName("td")[7].textContent = parsedData.description;
-            row.getElementsByTagName("td")[8].textContent = parsedData.annualSalary;
-            row.getElementsByTagName("td")[9].textContent = parsedData.salaryCurrency;
-            row.getElementsByTagName("td")[10].textContent = parsedData.location;
-            row.getElementsByTagName("td")[11].textContent = parsedData.workMode;
-            break;
+       // Iterate through rows
+       // Rows would be accessed using the "row" variable assigned in the for loop
+       if (table.rows[i].getAttribute("data-value") == jobPostingID) {
+            console.log("Match found in row", i);
+
+            // Get the location of the row where we found the matching job posting ID
+            let updateRowIndex = table.getElementsByTagName("tr")[i];
+
+            // Get td of job posting value
+            let td = updateRowIndex.getElementsByTagName("td");
+            console.log("Number of cells:", td.length);
+
+            // Reassign job posting to our value we updated to
+            td[1].innerHTML = parsedData.companyName; 
+            td[2].innerHTML = parsedData.role;
+            td[3].innerHTML = parsedData.jobTitle;
+            td[4].innerHTML = parsedData.datePosted;
+            td[5].innerHTML = parsedData.dateApplied;
+            td[6].innerHTML = parsedData.status;
+            td[7].innerHTML = parsedData.description;
+            td[8].innerHTML = parsedData.annualSalary;
+            td[9].innerHTML = parsedData.salaryCurrency;
+            td[10].innerHTML = parsedData.location;
+            td[11].innerHTML = parsedData.workMode;
+
+            console.log("Row updated successfully");
+            return;
        }
     }
-}
-
-// Unified formatDate function
-function formatDate(dateString, format = 'display') {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    if (format === 'input') {
-        return date.toISOString().split('T')[0];
-    } else {
-        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-    }
+    console.error("No matching row found for job posting ID:", jobPostingID);
 }
