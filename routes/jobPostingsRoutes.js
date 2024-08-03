@@ -170,18 +170,27 @@ router.post('/add-job-posting-ajax', function(req, res)
 
 // ------------------------------------------------------------------------------------------
 
-router.delete('/delete-job-posting/', function(req,res,next){
-    let data = req.body;
-    let jobPostingID = parseInt(data.id);
+router.delete('/delete-job-posting-ajax', function(req, res, next){
+    console.log("Delete request received for job posting ID:", req.body.id);
+    
+    let jobPostingID = parseInt(req.body.id);
     let deleteJobPosting = `DELETE FROM JobPostings WHERE idPosting = ?`;
+
+    console.log("Executing query:", deleteJobPosting, "with ID:", jobPostingID);
 
     db.pool.query(deleteJobPosting, [jobPostingID], function(error, result){
         if (error) {
-            console.log(error);
-            res.sendStatus(400);
-        } else {
-            res.sendStatus(204);
+            console.error("Database error:", error);
+            return res.status(500).json({ error: "An error occurred while deleting the job posting.", details: error.message });
         }
+        
+        console.log("Query result:", result);
+        
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: "Job posting not found." });
+        }
+        
+        res.status(200).json({ message: "Job posting deleted successfully." });
     });
 });
 
@@ -189,7 +198,8 @@ router.delete('/delete-job-posting/', function(req,res,next){
 
 router.put('/put-job-posting-ajax', function(req, res, next){
     let data = req.body;
-  
+    console.log("Received PUT request with data:", req.body);
+
     // Parse integer values
     let idPosting = parseInt(data.idPosting);
     let idCompany = parseInt(data.idCompany) || null;
@@ -200,7 +210,7 @@ router.put('/put-job-posting-ajax', function(req, res, next){
     let datePosted = data.datePosted ? new Date(data.datePosted) : null;
     let dateApplied = data.dateApplied ? new Date(data.dateApplied) : null;
 
-    // Other fields are at least empty strings if not provided
+    // Other fields will be empty strings if not provided
     let jobTitle = data.jobTitle || '';
     let status = data.status || '';
     let description = data.description || '';
@@ -208,20 +218,37 @@ router.put('/put-job-posting-ajax', function(req, res, next){
     let location = data.location || '';
     let workMode = data.workMode || '';
   
+    // Prepare the values array
+    const values = [
+        idCompany,
+        idRole,
+        jobTitle,
+        datePosted,
+        dateApplied,
+        status,
+        description,
+        annualSalary,
+        salaryCurrency,
+        location,
+        workMode,
+        idPosting
+    ];
+
     // Prepare the update query
-    let queryUpdateJobPosting = `UPDATE JobPostings SET 
-      idCompany = ?, 
-      idRole = ?, 
-      jobTitle = ?,
-      datePosted = ?, 
-      dateApplied = ?, 
-      status = ?,
-      description = ?,
-      annualSalary = ?,
-      salaryCurrency = ?,
-      location = ?,
-      workMode = ?
-      WHERE idPosting = ?`;
+    let queryUpdateJobPosting = 
+        `UPDATE JobPostings SET 
+        idCompany = ?, 
+        idRole = ?, 
+        jobTitle = ?,
+        datePosted = ?, 
+        dateApplied = ?, 
+        status = ?,
+        description = ?,
+        annualSalary = ?,
+        salaryCurrency = ?,
+        location = ?,
+        workMode = ?
+        WHERE idPosting = ?`;
   
     // // Prepare the select query to get updated data
     // let selectJobPosting = `
@@ -232,33 +259,35 @@ router.put('/put-job-posting-ajax', function(req, res, next){
     //   WHERE jp.idPosting = ?`;
   
     // Run the update query
-    db.pool.query(queryUpdateJobPosting, 
-        [idCompany, idRole, data.jobTitle, data.datePosted, data.dateApplied, 
-         data.status, data.description, annualSalary, data.salaryCurrency, 
-         data.location, data.workMode, idPosting], 
-        function(error, result){
-          if (error) {
-            console.log(error);
+    db.pool.query(queryUpdateJobPosting, values, function(error, result){
+        if (error) {
+            console.error("Database error:", error);
             res.status(400).json({ error: error.message });
-          } else {
-            // If there was no error, fetch the updated data
+        } else {
+            // Fetch the updated job posting
             let selectQuery = `
-              SELECT jp.*, c.companyName, r.role 
-              FROM JobPostings jp
-              LEFT JOIN Companies c ON jp.idCompany = c.idCompany
-              LEFT JOIN Roles r ON jp.idRole = r.idRole
-              WHERE jp.idPosting = ?`;
+                SELECT jp.*, c.companyName, r.role 
+                FROM JobPostings jp
+                LEFT JOIN Companies c ON jp.idCompany = c.idCompany
+                LEFT JOIN Roles r ON jp.idRole = r.idRole
+                WHERE jp.idPosting = ?`;
             
             db.pool.query(selectQuery, [idPosting], function(error, rows) {
-              if (error) {
-                console.log(error);
-                res.status(400).json({ error: error.message });
-              } else {
-                res.json(rows[0]); // Send back the updated job posting data
-              }
+                if (error) {
+                    console.error("Error fetching updated job posting:", error);
+                    res.status(400).json({ error: error.message });
+                } else {
+                    if (rows.length > 0) {
+                        console.log("Sending back updated job posting:", rows[0]);
+                        res.json(rows[0]);
+                    } else {
+                        res.status(404).json({ error: "Updated job posting not found" });
+                    }
+                }
             });
-          }
-      });
-  });
+        }
+    });
+});
+
 
 module.exports = router;

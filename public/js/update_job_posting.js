@@ -61,10 +61,23 @@ updateJobPostingForm.addEventListener("submit", function (e) {
     // Tell our AJAX request how to resolve
     xhttp.onreadystatechange = () => {
         if (xhttp.readyState == 4) {
-            console.log("Server response:", xhttp.responseText);
+            console.log("AJAX response received. Status:", xhttp.status);
+            console.log("Response text:", xhttp.responseText);
+            
             if (xhttp.status == 200) {
-                // Add the new data to the table
-                updateRow(xhttp.response, jobPostingValue);
+                let response;
+                try {
+                    response = JSON.parse(xhttp.responseText);
+                    console.log("Parsed response:", response);
+                } catch (e) {
+                    console.error("Error parsing JSON response:", e);
+                    console.log("Raw response:", xhttp.responseText);
+                    return;
+                }
+    
+                if (response && response.idPosting) {
+                    console.log("Updating row with ID:", response.idPosting);
+                    updateRow(xhttp.responseText, response.idPosting.toString());
 
                 // Clear the input fields for another transaction
                 inputJobPosting.value = '';
@@ -79,60 +92,78 @@ updateJobPostingForm.addEventListener("submit", function (e) {
                 inputSalaryCurrency.value = '';
                 inputLocation.value = '';
                 inputWorkMode.value = '';
+            } else if (response && response.message === "Update successful") {
+                console.log("Update successful, but no job posting data returned. Refreshing the page.");
+                // Optionally refresh the page or fetch the updated data
+                window.location.reload();
+            } else {
+                console.error("Unexpected response format:", response);
             }
-            else {
-                console.log("There was an error with the input.")
-            }
+        } else {
+            console.error("AJAX request failed. Status:", xhttp.status);
         }
     }
+}
 
     // Send the request and wait for the response
     xhttp.send(JSON.stringify(data));
 
 })
 
-function updateRow(data, jobPostingID){
+function updateRow(data, jobPostingID) {
+    console.log("updateRow called with jobPostingID:", jobPostingID);
     let parsedData = JSON.parse(data);
-    
     console.log("Parsed data:", parsedData);
-    console.log("Job Posting ID to update:", jobPostingID);
 
     let table = document.getElementById("job-postings-table");
 
     if (!table) {
-        console.error("Table with id 'job-postings-table' not found");
+        console.error("Could not find table with id 'job-postings-table'");
         return;
     }
 
-    for (let i = 0, row; row = table.rows[i]; i++) {
-       // Iterate through rows
-       // Rows would be accessed using the "row" variable assigned in the for loop
-       if (table.rows[i].getAttribute("data-value") == jobPostingID) {
-            console.log("Match found in row", i);
+    console.log("Total rows in table:", table.rows.length);
 
-            // Get the location of the row where we found the matching job posting ID
-            let updateRowIndex = table.getElementsByTagName("tr")[i];
+    let rowFound = false;
 
-            // Get td of job posting value
-            let td = updateRowIndex.getElementsByTagName("td");
-            console.log("Number of cells:", td.length);
+    // Start from 1 to skip the header row, if you have one
+    for (let i = 1; i < table.rows.length; i++) {
+        let row = table.rows[i];
+        let cells = row.getElementsByTagName("td");
+        
+        if (cells.length > 0) {
+            let rowId = cells[0].textContent.trim(); // Get the ID from the first cell
+            console.log(`Checking row ${i}, first cell content: ${rowId}`);
 
-            // Reassign job posting to our value we updated to
-            td[1].innerHTML = parsedData.companyName; 
-            td[2].innerHTML = parsedData.role;
-            td[3].innerHTML = parsedData.jobTitle;
-            td[4].innerHTML = parsedData.datePosted;
-            td[5].innerHTML = parsedData.dateApplied;
-            td[6].innerHTML = parsedData.status;
-            td[7].innerHTML = parsedData.description;
-            td[8].innerHTML = parsedData.annualSalary;
-            td[9].innerHTML = parsedData.salaryCurrency;
-            td[10].innerHTML = parsedData.location;
-            td[11].innerHTML = parsedData.workMode;
+            if (rowId == jobPostingID) {
+                rowFound = true;
+                console.log(`Match found in row ${i}`);
 
-            console.log("Row updated successfully");
-            return;
-       }
+                if (cells.length < 12) {
+                    console.error(`Row ${i} does not have enough cells. Expected at least 12, found ${cells.length}`);
+                    return;
+                }
+
+                // Update cells
+                cells[1].textContent = parsedData.companyName || ''; 
+                cells[2].textContent = parsedData.role || '';
+                cells[3].textContent = parsedData.jobTitle || '';
+                cells[4].textContent = parsedData.datePosted || '';
+                cells[5].textContent = parsedData.dateApplied || '';
+                cells[6].textContent = parsedData.status || '';
+                cells[7].textContent = parsedData.description || '';
+                cells[8].textContent = parsedData.annualSalary || '';
+                cells[9].textContent = parsedData.salaryCurrency || '';
+                cells[10].textContent = parsedData.location || '';
+                cells[11].textContent = parsedData.workMode || '';
+
+                console.log("Row updated successfully");
+                break;
+            }
+        }
     }
-    console.error("No matching row found for job posting ID:", jobPostingID);
+
+    if (!rowFound) {
+        console.error("No matching row found for job posting ID:", jobPostingID);
+    }
 }

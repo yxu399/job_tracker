@@ -74,7 +74,7 @@
       {{!-- Body section --}}
       <tbody>
           {{#each data}}
-          <tr>
+          <tr data-id="{{this.idPosting}}">
               <td>{{this.idPosting}}</td>
               <td>{{this.companyName}}</td>
               <td>{{this.role}}</td>
@@ -88,7 +88,7 @@
               <td>{{this.location}}</td>
               <td>{{this.workMode}}</td>
               <td><button class="btn btn-primary btn-sm" onclick="editJobPosting({{this.idPosting}})">Edit</button></td>
-              <td><button class="btn btn-danger btn-sm" onclick="deleteJobPosting({{this.idPosting}})">Delete</button></td>
+              <td><button class="btn btn-danger btn-sm delete-job-posting" data-id="{{this.idPosting}}">Delete</button></td>
           </tr>
           {{/each}}
       </tbody>

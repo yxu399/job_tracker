@@ -18,6 +18,11 @@ app.set('view engine', '.hbs');
 // Load route modules
 const jobPostingsRoutes = require('./routes/jobPostingsRoutes');
 
+app.use((req, res, next) => {
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+    next();
+});
+
 /*
     ROUTES
 */
@@ -33,13 +38,13 @@ function setupRoutes() {
 
     // 404 Error handler 
     app.use((req, res, next) => {
-        res.status(404).render('404');
+        res.status(404).json({ error: "Route not found" });
     });
 
     // General error handler
     app.use((err, req, res, next) => {
         console.error(err.stack);
-        res.status(500).render('error', { error: err });
+        res.status(500).json({ error: "Something went wrong", details: err.message });
     });
 }
 

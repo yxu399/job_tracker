@@ -1,49 +1,55 @@
-// Function to delete a job posting using regular JavaScript/XMLHttpRequest
+// for delete button in the table
+document.addEventListener('DOMContentLoaded', function() {
+    // Add event listeners to all delete buttons
+    const deleteButtons = document.querySelectorAll('.delete-job-posting');
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function(event) {
+            const jobID = this.getAttribute('data-id');
+            deleteJobPosting(jobID);
+        });
+    });
+});
+
 function deleteJobPosting(jobID) {
-    // Data we want to send
-    let data = {
-        id: jobID
-    };
-    
-    // Setup our AJAX request
-    var xhttp = new XMLHttpRequest();
-    xhttp.open("DELETE", "/delete-job-posting-ajax", true);
-    xhttp.setRequestHeader("Content-type", "application/json");
+    console.log('Attempting to delete job posting with ID:', jobID);
 
-    // Handle the AJAX response
-    xhttp.onreadystatechange = () => {
-        if (xhttp.readyState == 4 && xhttp.status == 204) {
-            // If successful, delete the row from the table
+    fetch(`/jobPostings/delete-job-posting-ajax`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id: jobID }),
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        return response.text().then(text => {
+            try {
+                return { status: response.status, body: JSON.parse(text) };
+            } catch (e) {
+                console.error('Received non-JSON response:', text);
+                return { status: response.status, body: text };
+            }
+        });
+    })
+    .then(({status, body}) => {
+        if (status === 200) {
+            console.log('Delete successful:', body);
             deleteRow(jobID);
+        } else {
+            console.error('Error:', body);
+            throw new Error(body.error || 'Unknown error occurred');
         }
-        else if (xhttp.readyState == 4 && xhttp.status != 204) {
-            console.log("There was an error deleting the job posting.")
-        }
-    }
-
-    // Send the request
-    xhttp.send(JSON.stringify(data));
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
 }
 
-// Function to delete the row from the table
-function deleteRow(jobID){
-    let table = document.getElementById("job-postings-table");
-    for (let i = 0, row; row = table.rows[i]; i++) {
-       if (table.rows[i].getAttribute("data-value") == jobID) {
-            table.deleteRow(i);
-            deleteDropDownMenu(jobID);
-            break;
-       }
-    }
-}
-
-// Function to remove the job posting from any dropdown menus
-function deleteDropDownMenu(jobID){
-    let selectMenu = document.getElementById("jobSelect");
-    for (let i = 0; i < selectMenu.length; i++){
-        if (Number(selectMenu.options[i].value) === Number(jobID)){
-            selectMenu[i].remove();
-            break;
-        } 
+function deleteRow(jobID) {
+    const row = document.querySelector(`tr[data-id="${jobID}"]`);
+    if (row) {
+        row.remove();
+    } else {
+        console.error('Row not found for job ID:', jobID);
     }
 }
