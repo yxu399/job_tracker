@@ -4,7 +4,7 @@
 let addJobPostingForm = document.getElementById('add-job-posting-form-ajax');
 
 function validateForm() {
-    let requiredFields = ['input-idCompany-ajax', 'input-jobTitle-ajax', 'input-status-ajax'];
+    let requiredFields = ['input-idCompany-ajax', 'input-jobTitle-ajax'];
     for (let field of requiredFields) {
         let inputField = document.getElementById(field);
         if (!inputField.value) {
@@ -57,7 +57,7 @@ addJobPostingForm.addEventListener("submit", function (e) {
     // Put our data we want to send in a javascript object
     let data = {
         idCompany: companyValue,
-        idRole: roleValue ? roleValue : null,  // Send null if roleValue is empty
+        idRole: roleValue ? roleValue : null,  
         jobTitle: jobTitleValue,
         datePosted: datePostedValue || null,
         dateApplied: dateAppliedValue || null,
@@ -136,7 +136,7 @@ addRowToTable = (data) => {
         <td>${newRow.jobTitle}</td>
         <td>${newRow.datePosted}</td>
         <td>${newRow.dateApplied || 'N/A'}</td>
-        <td>${newRow.status}</td>
+        <td>${newRow.status || 'N/A'}</td>
         <td>${newRow.description || 'N/A'}</td>
         <td>${newRow.annualSalary || 'N/A'}</td>
         <td>${newRow.salaryCurrency || 'N/A'}</td>
