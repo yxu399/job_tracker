@@ -105,23 +105,16 @@ router.post('/add-job-posting-ajax', function(req, res)
     // Capture NULL values
     let idCompany = parseInt(data.idCompany); 
     // Validate required fields
-    if (isNaN(idCompany)) 
-    {
-        console.log('Invalid idCompany:', data['input-idCompany']);
+    if (isNaN(idCompany)) {
+        console.log('Invalid idCompany:', data.idCompany);
         return res.status(400).send('Invalid Company ID');
     }
 
-    let idRole = parseInt(data.idRole);
-    if (isNaN(idRole)) 
-    {
-        idRole = 'NULL';
-    }
+    // Handle idRole: if it's an empty string or not provided, set it to NULL
+    let idRole = data.idRole && data.idRole.trim() !== '' ? parseInt(data.idRole) : null;
 
-    let annualSalary = parseFloat(data.annualSalary) 
-    if (isNaN(annualSalary))
-    {
-        annualSalary = 'NULL'
-    }
+    let annualSalary = data.annualSalary && data.annualSalary.trim() !== '' ? parseFloat(data.annualSalary) : null;
+
 
     // Create the query and run it on the database
     query1 = `INSERT INTO JobPostings (idCompany, idRole, 
@@ -154,12 +147,19 @@ router.post('/add-job-posting-ajax', function(req, res)
             res.status(500).json({ error: 'Error adding job posting', details: error.message });
         } else {
             // Fetch the newly inserted row
-            const fetchQuery = `SELECT * FROM JobPostings WHERE idPosting = ?`;
+            const fetchQuery = `
+                SELECT jp.*, c.companyName, r.role AS roleName 
+                FROM JobPostings jp 
+                LEFT JOIN Companies c ON jp.idCompany = c.idCompany 
+                LEFT JOIN Roles r ON jp.idRole = r.idRole 
+                WHERE jp.idPosting = ?`;
+
             db.pool.query(fetchQuery, [result.insertId], function(fetchError, fetchResult) {
                 if (fetchError) {
                     console.error('Error fetching new job posting:', fetchError);
                     res.status(500).json({ error: 'Error fetching new job posting', details: fetchError.message });
                 } else {
+                    console.log('Fetched result:', fetchResult); 
                     // Send back the newly inserted row
                     res.json(fetchResult);
                 }
@@ -170,29 +170,33 @@ router.post('/add-job-posting-ajax', function(req, res)
 
 // ------------------------------------------------------------------------------------------
 
-router.delete('/delete-job-posting-ajax', function(req, res, next){
-    console.log("Delete request received for job posting ID:", req.body.id);
-    
-    let jobPostingID = parseInt(req.body.id);
-    let deleteJobPosting = `DELETE FROM JobPostings WHERE idPosting = ?`;
+router.delete('/delete-job-posting/:id', (req, res) => {
+    console.log("Received DELETE request for job ID:", req.params.id);  // Debugging log
+    const jobId = parseInt(req.params.id);
 
-    console.log("Executing query:", deleteJobPosting, "with ID:", jobPostingID);
+    if (isNaN(jobId)) {
+        console.error("Invalid job ID:", req.params.id);
+        return res.status(400).json({ error: "Invalid job ID." });
+    }
 
-    db.pool.query(deleteJobPosting, [jobPostingID], function(error, result){
+    const deleteJobPosting = 'DELETE FROM JobPostings WHERE idPosting = ?';
+
+    db.pool.query(deleteJobPosting, [jobId], (error, result) => {
         if (error) {
             console.error("Database error:", error);
             return res.status(500).json({ error: "An error occurred while deleting the job posting.", details: error.message });
         }
-        
-        console.log("Query result:", result);
-        
+
         if (result.affectedRows === 0) {
+            console.warn("Job posting not found:", jobId);
             return res.status(404).json({ error: "Job posting not found." });
         }
-        
+
+        console.log("Job posting deleted successfully:", jobId);
         res.status(200).json({ message: "Job posting deleted successfully." });
     });
 });
+
 
 // ------------------------------------------------------------------------------------------
 

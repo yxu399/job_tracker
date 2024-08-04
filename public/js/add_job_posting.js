@@ -1,20 +1,25 @@
+// add_job_posting.jx
+
 // Get the objects we need to modify
 let addJobPostingForm = document.getElementById('add-job-posting-form-ajax');
 
 function validateForm() {
     let requiredFields = ['input-idCompany-ajax', 'input-jobTitle-ajax', 'input-status-ajax'];
     for (let field of requiredFields) {
-        if (!document.getElementById(field).value) {
+        let inputField = document.getElementById(field);
+        if (!inputField.value) {
             alert(`Please fill out the ${field.replace('input-', '').replace('-ajax', '')} field.`);
+            inputField.classList.add('is-invalid');
             return false;
+        } else {
+            inputField.classList.remove('is-invalid');
         }
     }
     return true;
 }
 
 // Modify the objects we need
-addJobPostingForm.addEventListener("submit", function (e) 
-{
+addJobPostingForm.addEventListener("submit", function (e) {
     
     // Prevent the form from submitting
     e.preventDefault();
@@ -52,16 +57,16 @@ addJobPostingForm.addEventListener("submit", function (e)
     // Put our data we want to send in a javascript object
     let data = {
         idCompany: companyValue,
-        idRole: roleValue,
+        idRole: roleValue ? roleValue : null,  // Send null if roleValue is empty
         jobTitle: jobTitleValue,
-        datePosted: datePostedValue,
-        dateApplied: dateAppliedValue,
+        datePosted: datePostedValue || null,
+        dateApplied: dateAppliedValue || null,
         status: statusValue,
         description: descriptionValue,
-        annualSalary: annualSalaryValue,
-        salaryCurrency: salaryCurrencyValue,
-        location: locationValue,
-        workMode: workModeValue
+        annualSalary: annualSalaryValue || null,
+        salaryCurrency: salaryCurrencyValue || null,
+        location: locationValue || null,
+        workMode: workModeValue || null
     }
     
     // Setup our AJAX request
@@ -73,22 +78,26 @@ addJobPostingForm.addEventListener("submit", function (e)
     xhttp.onreadystatechange = () => {
         if (xhttp.readyState == 4) {
             if (xhttp.status == 200) {
+
+                console.log('Response received:', xhttp.responseText);
                 // Add the new data to the table
                 addRowToTable(xhttp.response);
     
                 // Clear the input fields for another transaction
-                inputCompany.value = '';
-                inputRole.value = '';
-                inputJobTitle.value = '';
-                inputDatePosted.value = '';
-                inputDateApplied.value = '';
-                inputStatus.value = '';
-                inputDescription.value = '';
-                inputAnnualSalary.value = '';
-                inputSalaryCurrency.value = '';
-                inputLocation.value = '';
-                inputWorkMode.value = '';
+                addJobPostingForm.reset();
+                document.querySelectorAll('.is-invalid').forEach(field => {
+                    field.classList.remove('is-invalid');
+                });
+
+                // Close the modal
+                let addModal = bootstrap.Modal.getInstance(document.getElementById('addJobPostingModal'));
+                addModal.hide();
+                
+                // Refresh the page
+                window.location.reload();
+
             } else {
+
                 console.error("Error adding job posting:", xhttp.status, xhttp.statusText);
                 console.error("Response:", xhttp.responseText);
                 alert("There was an error adding the job posting. Please check the console for details.");
@@ -102,87 +111,47 @@ addJobPostingForm.addEventListener("submit", function (e)
 
 // Creates a single row from an Object representing a single record from JobPostings
 addRowToTable = (data) => {
+    console.log('Received data:', data);
 
-    // Get a reference to the current table on the page and clear it out.
-    let currentTable = document.getElementById("job-postings-table");
+    let parsedData;
+    try {
+        parsedData = JSON.parse(data);
+    } catch (error) {
+        console.error('Error parsing data:', error);
+        parsedData = data;  // If it's already an object, use it as is
+    }
+    console.log('Parsed data:', parsedData);
 
-    // Get the location where we should insert the new row (end of table)
-    let newRowIndex = currentTable.rows.length;
+    let newRow = Array.isArray(parsedData) ? parsedData[0] : parsedData;
+    console.log('New row data:', newRow);
 
-    // Get a reference to the new row from the database query (last object)
-    let parsedData = JSON.parse(data);
-    let newRow = parsedData[parsedData.length - 1]
-
-    // Create a row and cells
     let row = document.createElement("TR");
-    let idCell = document.createElement("TD");
-    let companyCell = document.createElement("TD");
-    let roleCell = document.createElement("TD");
-    let jobTitleCell = document.createElement("TD");
-    let datePostedCell = document.createElement("TD");
-    let dateAppliedCell = document.createElement("TD");
-    let statusCell = document.createElement("TD");
-    let descriptionCell = document.createElement("TD");
-    let annualSalaryCell = document.createElement("TD");
-    let salaryCurrencyCell = document.createElement("TD");
-    let locationCell = document.createElement("TD");
-    let workModeCell = document.createElement("TD");
-    let editCell = document.createElement("TD");
-    let deleteCell = document.createElement("TD");
+    row.setAttribute("data-id", newRow.idPosting);
 
     // Fill the cells with correct data
-    idCell.innerText = newRow.idPosting;
-    companyCell.innerText = newRow.idCompany;
-    roleCell.innerText = newRow.idRole || 'N/A';
-    jobTitleCell.innerText = newRow.jobTitle;
-    datePostedCell.innerText = newRow.datePosted;
-    dateAppliedCell.innerText = newRow.dateApplied || 'N/A';
-    statusCell.innerText = newRow.status;
-    descriptionCell.innerText = newRow.description;
-    annualSalaryCell.innerText = newRow.annualSalary;
-    salaryCurrencyCell.innerText = newRow.salaryCurrency;
-    locationCell.innerText = newRow.location;
-    workModeCell.innerText = newRow.workMode;
-
-    editCell = document.createElement("button");
-    editCell.innerHTML = "Edit";
-    editCell.onclick = function(){
-        updateJobPosting(newRow.idPosting);
-    };
-    
-    deleteCell = document.createElement("button");
-    deleteCell.innerHTML = "Delete";
-    deleteCell.onclick = function(){
-        deleteJobPosting(newRow.idPosting);
-    };
-
-    // Add the cells to the row 
-    row.appendChild(idCell);
-    row.appendChild(companyCell);
-    row.appendChild(roleCell);
-    row.appendChild(jobTitleCell);
-    row.appendChild(datePostedCell);
-    row.appendChild(dateAppliedCell);
-    row.appendChild(statusCell);
-    row.appendChild(descriptionCell);
-    row.appendChild(annualSalaryCell);
-    row.appendChild(salaryCurrencyCell);
-    row.appendChild(locationCell);
-    row.appendChild(workModeCell);
-    row.appendChild(editCell);
-    row.appendChild(deleteCell);
-    
-    // // Add a custom row attribute so the deleteRow function can find a newly added row
-    // row.setAttribute('data-value', newRow.idPosting);
+    row.innerHTML = `
+        <td>${newRow.idPosting}</td>
+        <td>${newRow.companyName}</td>
+        <td>${newRow.roleName || 'N/A'}</td>
+        <td>${newRow.jobTitle}</td>
+        <td>${newRow.datePosted}</td>
+        <td>${newRow.dateApplied || 'N/A'}</td>
+        <td>${newRow.status}</td>
+        <td>${newRow.description || 'N/A'}</td>
+        <td>${newRow.annualSalary || 'N/A'}</td>
+        <td>${newRow.salaryCurrency || 'N/A'}</td>
+        <td>${newRow.location || 'N/A'}</td>
+        <td>${newRow.workMode || 'N/A'}</td>
+        <td><button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#updateJobPostingModal" onclick="loadJobPostingData(${newRow.idPosting})">Edit</button></td>
+        <td>
+            <button 
+                class="btn btn-danger btn-sm delete-job-posting" 
+                data-id="${newRow.idPosting}" >
+                Delete
+            </button>
+        </td>
+    `;
 
     // Add the row to the table
-    currentTable.appendChild(row);
-
-    // // Find drop down menu, create a new option, fill data in the option (job title, id),
-    // // then append option to drop down menu so newly created rows via ajax will be found in it without needing a refresh
-    // let selectMenu = document.getElementById("mySelect");
-    // let option = document.createElement("option");
-    // option.text = newRow.jobTitle + ' at ' + newRow.companyName;
-    // option.value = newRow.idPosting;
-    // selectMenu.add(option);
+    document.getElementById("job-postings-table").getElementsByTagName('tbody')[0].appendChild(row);
 };
