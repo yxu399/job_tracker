@@ -109,3 +109,21 @@
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
+.editing .editable {
+    padding: 0;
+  }
+  
+  .editing .editable input,
+  .editing .editable select,
+  .editing .editable textarea {
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    border: none;
+    background-color: #f8f9fa;
+  }
+  
+  .editing .editable textarea {
+    resize: vertical;
+  }

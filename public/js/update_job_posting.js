@@ -1,169 +1,199 @@
-// Get the objects we need to modify
-let updateJobPostingForm = document.getElementById('update-job-posting-form-ajax');
+let companies = [];
+let roles = [];
+let dataLoaded = false;
 
-// Modify the objects we need
-updateJobPostingForm.addEventListener("submit", function (e) {
-   
-    // Prevent the form from submitting
-    e.preventDefault();
-
-    // Get form fields we need to get data from
-    let inputJobPosting = document.getElementById("job-posting-select");
-    let inputCompany = document.getElementById("input-company-update");
-    let inputRole = document.getElementById("input-role-update");
-    let inputJobTitle = document.getElementById("input-job-title-update");
-    let inputDatePosted = document.getElementById("input-date-posted-update");
-    let inputDateApplied = document.getElementById("input-date-applied-update");
-    let inputStatus = document.getElementById("input-status-update");
-    let inputDescription = document.getElementById("input-description-update");
-    let inputAnnualSalary = document.getElementById("input-annual-salary-update");
-    let inputSalaryCurrency = document.getElementById("input-salary-currency-update");
-    let inputLocation = document.getElementById("input-location-update");
-    let inputWorkMode = document.getElementById("input-work-mode-update");
-
-    // Get the values from the form fields
-    let jobPostingValue = inputJobPosting.value;
-    let companyValue = inputCompany.value;
-    let roleValue = inputRole.value;
-    let jobTitleValue = inputJobTitle.value;
-    let datePostedValue = inputDatePosted.value;
-    let dateAppliedValue = inputDateApplied.value;
-    let statusValue = inputStatus.value;
-    let descriptionValue = inputDescription.value;
-    let annualSalaryValue = inputAnnualSalary.value;
-    let salaryCurrencyValue = inputSalaryCurrency.value;
-    let locationValue = inputLocation.value;
-    let workModeValue = inputWorkMode.value;
-
-    // Put our data we want to send in a javascript object
-    let data = {
-        idPosting: jobPostingValue,
-        idCompany: companyValue,
-        idRole: roleValue,
-        jobTitle: jobTitleValue,
-        datePosted: datePostedValue,
-        dateApplied: dateAppliedValue,
-        status: statusValue,
-        description: descriptionValue,
-        annualSalary: annualSalaryValue,
-        salaryCurrency: salaryCurrencyValue,
-        location: locationValue,
-        workMode: workModeValue
-    }
+document.addEventListener('DOMContentLoaded', function() {
+    const table = document.getElementById('job-postings-table');
     
-    console.log("Data being sent to server:", data);
+    loadData().then(() => {
+        dataLoaded = true;
+        console.log('Companies and roles loaded');
+    }).catch(error => {
+        console.error('Error loading companies and roles:', error);
+    });
 
-    // Setup our AJAX request
-    var xhttp = new XMLHttpRequest();
-    xhttp.open("PUT", "/jobPostings/put-job-posting-ajax", true);
-    xhttp.setRequestHeader("Content-type", "application/json");
-
-    // Tell our AJAX request how to resolve
-    xhttp.onreadystatechange = () => {
-        if (xhttp.readyState == 4) {
-            console.log("AJAX response received. Status:", xhttp.status);
-            console.log("Response text:", xhttp.responseText);
-            
-            if (xhttp.status == 200) {
-                let response;
-                try {
-                    response = JSON.parse(xhttp.responseText);
-                    console.log("Parsed response:", response);
-                } catch (e) {
-                    console.error("Error parsing JSON response:", e);
-                    console.log("Raw response:", xhttp.responseText);
-                    return;
-                }
-    
-                if (response && response.idPosting) {
-                    console.log("Updating row with ID:", response.idPosting);
-                    updateRow(xhttp.responseText, response.idPosting.toString());
-
-                // Clear the input fields for another transaction
-                inputJobPosting.value = '';
-                inputCompany.value = '';
-                inputRole.value = '';
-                inputJobTitle.value = '';
-                inputDatePosted.value = '';
-                inputDateApplied.value = '';
-                inputStatus.value = '';
-                inputDescription.value = '';
-                inputAnnualSalary.value = '';
-                inputSalaryCurrency.value = '';
-                inputLocation.value = '';
-                inputWorkMode.value = '';
-            } else if (response && response.message === "Update successful") {
-                console.log("Update successful, but no job posting data returned. Refreshing the page.");
-                // Optionally refresh the page or fetch the updated data
-                window.location.reload();
-            } else {
-                console.error("Unexpected response format:", response);
+    table.addEventListener('click', function(e) {
+        if (e.target.classList.contains('edit-job-posting')) {
+            if (!dataLoaded) {
+                alert('Please wait, loading necessary data...');
+                return;
             }
+            const row = e.target.closest('tr');
+            toggleEditMode(row);
+        }
+    });
+
+    function loadData() {
+        return Promise.all([
+            fetch('/jobPostings/get-companies').then(res => res.json()),
+            fetch('/jobPostings/get-roles').then(res => res.json())
+        ]).then(([fetchedCompanies, fetchedRoles]) => {
+            companies = fetchedCompanies;
+            roles = fetchedRoles;
+        });
+    }
+
+    function toggleEditMode(row) {
+        const isEditing = row.classList.toggle('editing');
+        const editButton = row.querySelector('.edit-job-posting');
+    
+        if (isEditing) {
+            enterEditMode(row);
+            editButton.textContent = 'Save';
+            editButton.classList.replace('btn-primary', 'btn-success');
         } else {
-            console.error("AJAX request failed. Status:", xhttp.status);
+            saveChanges(row).then(updatedJobPosting => {
+                updateRowDisplay(row, updatedJobPosting);
+                editButton.textContent = 'Edit';
+                editButton.classList.replace('btn-success', 'btn-primary');
+            }).catch(error => {
+                console.error('Failed to update job posting:', error);
+                row.classList.add('editing');
+                editButton.textContent = 'Save';
+                editButton.classList.replace('btn-primary', 'btn-success');
+                alert('Failed to update job posting. Please try again.');
+            });
         }
     }
-}
 
-    // Send the request and wait for the response
-    xhttp.send(JSON.stringify(data));
-
-})
-
-function updateRow(data, jobPostingID) {
-    console.log("updateRow called with jobPostingID:", jobPostingID);
-    let parsedData = JSON.parse(data);
-    console.log("Parsed data:", parsedData);
-
-    let table = document.getElementById("job-postings-table");
-
-    if (!table) {
-        console.error("Could not find table with id 'job-postings-table'");
-        return;
+    function enterEditMode(row) {
+        row.querySelectorAll('.editable').forEach(cell => {
+            const field = cell.getAttribute('data-field');
+            const value = cell.textContent.trim();
+            const input = createInputField(field, value);
+            cell.textContent = '';
+            cell.appendChild(input);
+        });
     }
 
-    console.log("Total rows in table:", table.rows.length);
-
-    let rowFound = false;
-
-    // Start from 1 to skip the header row, if you have one
-    for (let i = 1; i < table.rows.length; i++) {
-        let row = table.rows[i];
-        let cells = row.getElementsByTagName("td");
-        
-        if (cells.length > 0) {
-            let rowId = cells[0].textContent.trim(); // Get the ID from the first cell
-            console.log(`Checking row ${i}, first cell content: ${rowId}`);
-
-            if (rowId == jobPostingID) {
-                rowFound = true;
-                console.log(`Match found in row ${i}`);
-
-                if (cells.length < 12) {
-                    console.error(`Row ${i} does not have enough cells. Expected at least 12, found ${cells.length}`);
-                    return;
-                }
-
-                // Update cells
-                cells[1].textContent = parsedData.companyName || ''; 
-                cells[2].textContent = parsedData.role || '';
-                cells[3].textContent = parsedData.jobTitle || '';
-                cells[4].textContent = parsedData.datePosted || '';
-                cells[5].textContent = parsedData.dateApplied || '';
-                cells[6].textContent = parsedData.status || '';
-                cells[7].textContent = parsedData.description || '';
-                cells[8].textContent = parsedData.annualSalary || '';
-                cells[9].textContent = parsedData.salaryCurrency || '';
-                cells[10].textContent = parsedData.location || '';
-                cells[11].textContent = parsedData.workMode || '';
-
-                console.log("Row updated successfully");
+    function createInputField(field, value) {
+        let input;
+        switch(field) {
+            case 'companyName':
+                input = createDropdown(companies, 'idCompany', 'companyName', value);
                 break;
-            }
+            case 'role':
+                input = createDropdown(roles, 'idRole', 'role', value);
+                break;
+            case 'description':
+                input = document.createElement('textarea');
+                input.rows = 3;
+                input.value = value;
+                break;
+            case 'datePosted':
+            case 'dateApplied':
+                input = document.createElement('input');
+                input.type = 'date';
+                input.value = formatDateForInput(value);
+                break;
+            case 'status':
+                input = createStatusDropdown(value);
+                break;
+            default:
+                input = document.createElement('input');
+                input.type = 'text';
+                input.value = value;
+                break;
         }
+        input.classList.add('form-control');
+        return input;
     }
 
-    if (!rowFound) {
-        console.error("No matching row found for job posting ID:", jobPostingID);
+    function createDropdown(items, valueField, textField, currentValue) {
+        const select = document.createElement('select');
+        items.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item[valueField];
+            option.textContent = item[textField];
+            if (item[textField] === currentValue) {
+                option.selected = true;
+            }
+            select.appendChild(option);
+        });
+        return select;
     }
-}
+
+    function createStatusDropdown(currentValue) {
+        const select = document.createElement('select');
+        ['Under Review', 'Interview Scheduled', 'Applied', 'Rejected', 'Offer Extended'].forEach(status => {
+            const option = document.createElement('option');
+            option.value = status;
+            option.textContent = status;
+            if (status === currentValue) option.selected = true;
+            select.appendChild(option);
+        });
+        return select;
+    }
+
+    function saveChanges(row) {
+        const updatedData = {};
+        row.querySelectorAll('.editable').forEach(cell => {
+            const field = cell.getAttribute('data-field');
+            const input = cell.firstChild;
+            updatedData[field] = input.type === 'select-one' ? input.options[input.selectedIndex].text : input.value;
+            if (field === 'companyName') updatedData['idCompany'] = input.value;
+            if (field === 'role') updatedData['idRole'] = input.value;
+        });
+
+        const id = row.getAttribute('data-id');
+        return updateJobPosting(id, formatDataForUpdate(updatedData));
+    }
+
+    function updateRowDisplay(row, updatedJobPosting) {
+        row.querySelectorAll('.editable').forEach(cell => {
+            const field = cell.getAttribute('data-field');
+            if (field in updatedJobPosting) {
+                cell.textContent = ['datePosted', 'dateApplied'].includes(field) 
+                    ? formatDateToDisplay(new Date(updatedJobPosting[field])) 
+                    : updatedJobPosting[field];
+            }
+        });
+    }
+
+    function formatDataForUpdate(data) {
+        const formatted = { ...data };
+        if (formatted.datePosted) formatted.datePosted = formatDate(formatted.datePosted);
+        if (formatted.dateApplied) formatted.dateApplied = formatDate(formatted.dateApplied);
+        ['idCompany', 'idRole', 'annualSalary'].forEach(field => {
+            if (formatted[field]) formatted[field] = Number(formatted[field]);
+        });
+        return formatted;
+    }
+
+    function formatDate(dateString) {
+        const date = new Date(dateString + 'T00:00:00');
+        if (!isNaN(date)) {
+            return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+        }
+        return '';
+    }
+    
+
+    function formatDateForInput(dateString) {
+        const date = new Date(dateString);
+        return !isNaN(date) ? new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().split('T')[0] : '';
+    }
+
+    function formatDateToDisplay(date) {
+        return `${('0' + (date.getMonth() + 1)).slice(-2)}/${('0' + date.getDate()).slice(-2)}/${date.getFullYear()}`;
+    }
+
+    function updateJobPosting(id, updatedData) {
+        const changedData = Object.entries(updatedData).reduce((acc, [key, value]) => {
+            if (value !== null && value !== undefined && value !== '') acc[key] = value;
+            return acc;
+        }, {});
+
+        return fetch(`/jobPostings/put-job-posting-ajax`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ idPosting: id, ...changedData }),
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.json();
+        });
+    }
+});

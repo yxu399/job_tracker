@@ -1,55 +1,50 @@
-// for delete button in the table
+// delete_job_posting.js
+
+// Add event listener for delete buttons with confirmation prompt
 document.addEventListener('DOMContentLoaded', function() {
-    // Add event listeners to all delete buttons
     const deleteButtons = document.querySelectorAll('.delete-job-posting');
     deleteButtons.forEach(button => {
-        button.addEventListener('click', function(event) {
-            const jobID = this.getAttribute('data-id');
-            deleteJobPosting(jobID);
-        });
+        button.addEventListener('click', handleDeleteButtonClick);
     });
 });
 
-function deleteJobPosting(jobID) {
-    console.log('Attempting to delete job posting with ID:', jobID);
 
-    fetch(`/jobPostings/delete-job-posting-ajax`, {
-        method: 'DELETE',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ id: jobID }),
-    })
-    .then(response => {
-        console.log('Response status:', response.status);
-        return response.text().then(text => {
-            try {
-                return { status: response.status, body: JSON.parse(text) };
-            } catch (e) {
-                console.error('Received non-JSON response:', text);
-                return { status: response.status, body: text };
-            }
-        });
-    })
-    .then(({status, body}) => {
-        if (status === 200) {
-            console.log('Delete successful:', body);
-            deleteRow(jobID);
-        } else {
-            console.error('Error:', body);
-            throw new Error(body.error || 'Unknown error occurred');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-    });
-}
-
-function deleteRow(jobID) {
-    const row = document.querySelector(`tr[data-id="${jobID}"]`);
-    if (row) {
-        row.remove();
-    } else {
-        console.error('Row not found for job ID:', jobID);
+function handleDeleteButtonClick(event) {
+    event.preventDefault();
+    const button = this;
+    const jobId = button.getAttribute('data-id');
+    if (confirm('Are you sure you want to delete this job posting?')) {
+        console.log("Deleting job ID:", jobId);
+        deleteJobPosting(jobId);
     }
 }
+
+function deleteJobPosting(id) {
+    console.log("Sending DELETE request for job ID:", id);
+    fetch(`/jobPostings/delete-job-posting/${id}`, {
+        method: 'DELETE',
+    })
+    .then(response => {
+        console.log("Response status:", response.status);
+        if (response.ok) {
+            console.log("Job posting deleted successfully:", id);
+            const row = document.querySelector(`tr[data-id='${id}']`);
+            if (row) {
+                row.remove();
+            }
+        } else {
+            response.json().then(data => {
+                console.error("Failed to delete job posting:", data.error); // Debugging log
+                alert(`Failed to delete the job posting: ${data.error}`);
+            }).catch(error => {
+                console.error('Error parsing response:', error);
+                alert('Failed to delete the job posting.');
+            });
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+  function loadJobPostingData(id) {
+    // Load job posting data into the update modal (AJAX request)
+  }
