@@ -50,6 +50,12 @@ router.get('/', function(req, res) {
             return;
         }
 
+        jobPostings = jobPostings.map(posting => {
+            posting.datePosted = formatDateToDisplay(posting.datePosted);
+            posting.dateApplied = formatDateToDisplay(posting.dateApplied);
+            return posting;
+        });
+
         console.log("Job Postings results:", jobPostings);
         
         // Run the second query
@@ -92,6 +98,37 @@ router.get('/', function(req, res) {
     });
 });
 
+function formatDateToDisplay(dateString) {
+    const date = new Date(dateString);
+    const month = ('0' + (date.getMonth() + 1)).slice(-2);
+    const day = ('0' + date.getDate()).slice(-2);
+    const year = date.getFullYear();
+    return `${month}/${day}/${year}`;
+}
+
+// APIs to support the dropdown functionality for companies and roles
+// Get all companies
+router.get('/get-companies', function(req, res) {
+    let query = "SELECT idCompany, companyName FROM Companies;";
+    db.pool.query(query, (error, results) => {
+        if (error) {
+            return res.status(500).json({ error: error });
+        }
+        res.json(results);
+    });
+});
+
+// Get all roles
+router.get('/get-roles', function(req, res) {
+    let query = "SELECT idRole, role FROM Roles;";
+    db.pool.query(query, (error, results) => {
+        if (error) {
+            return res.status(500).json({ error: error });
+        }
+        res.json(results);
+    });
+});
+
 // ------------------------------------------------------------------------------------------
 
 router.post('/add-job-posting-ajax', function(req, res)
@@ -127,8 +164,8 @@ router.post('/add-job-posting-ajax', function(req, res)
         data.idCompany,
         data.idRole,
         data.jobTitle,
-        data.datePosted,
-        data.dateApplied,
+        adjustDateForStorage(data.datePosted),
+        adjustDateForStorage(data.dateApplied),
         data.status,
         data.description,
         data.annualSalary,
@@ -154,19 +191,23 @@ router.post('/add-job-posting-ajax', function(req, res)
                 LEFT JOIN Roles r ON jp.idRole = r.idRole 
                 WHERE jp.idPosting = ?`;
 
-            db.pool.query(fetchQuery, [result.insertId], function(fetchError, fetchResult) {
-                if (fetchError) {
-                    console.error('Error fetching new job posting:', fetchError);
-                    res.status(500).json({ error: 'Error fetching new job posting', details: fetchError.message });
-                } else {
-                    console.log('Fetched result:', fetchResult); 
-                    // Send back the newly inserted row
-                    res.json(fetchResult);
-                }
-            });
-        }
+                db.pool.query(fetchQuery, [result.insertId], function(fetchError, fetchResult) {
+                    if (fetchError) {
+                        console.error('Error fetching new job posting:', fetchError);
+                        res.status(500).json({ error: 'Error fetching new job posting', details: fetchError.message });
+                    } else {
+                        const formattedResult = fetchResult.map(posting => {
+                            posting.datePosted = formatDateToDisplay(posting.datePosted);
+                            posting.dateApplied = formatDateToDisplay(posting.dateApplied);
+                            return posting;
+                        });
+                        console.log('Fetched result:', formattedResult); 
+                        res.json(formattedResult);
+                    }
+                });
+            }
+        });
     });
-});
 
 // ------------------------------------------------------------------------------------------
 
@@ -200,98 +241,106 @@ router.delete('/delete-job-posting/:id', (req, res) => {
 
 // ------------------------------------------------------------------------------------------
 
-router.put('/put-job-posting-ajax', function(req, res, next){
+router.put('/put-job-posting-ajax', function(req, res, next) {
     let data = req.body;
-    console.log("Received PUT request with data:", req.body);
+    console.log("Received PUT request with data:", JSON.stringify(data, null, 2));
 
-    // Parse integer values
-    let idPosting = parseInt(data.idPosting);
-    let idCompany = parseInt(data.idCompany) || null;
-    let idRole = parseInt(data.idRole) || null;
-    let annualSalary = parseFloat(data.annualSalary) || null;
+    const dateFields = ['datePosted', 'dateApplied'];
+    for (const field of dateFields) {
+        if (data[field] && !isValidDate(data[field])) {
+            return res.status(400).json({ error: `Invalid date format for ${field}. Expected YYYY-MM-DD.` });
+        }
+        if (data[field]) {
+            data[field] = adjustDateForStorage(data[field]);
+        }
+    }
 
-    // Validate date fields
-    let datePosted = data.datePosted ? new Date(data.datePosted) : null;
-    let dateApplied = data.dateApplied ? new Date(data.dateApplied) : null;
+    let updateFields = [];
+    let values = [];
+    let query = 'UPDATE JobPostings SET ';
 
-    // Other fields will be empty strings if not provided
-    let jobTitle = data.jobTitle || '';
-    let status = data.status || '';
-    let description = data.description || '';
-    let salaryCurrency = data.salaryCurrency || '';
-    let location = data.location || '';
-    let workMode = data.workMode || '';
-  
-    // Prepare the values array
-    const values = [
-        idCompany,
-        idRole,
-        jobTitle,
-        datePosted,
-        dateApplied,
-        status,
-        description,
-        annualSalary,
-        salaryCurrency,
-        location,
-        workMode,
-        idPosting
+    const fields = [
+        'idCompany', 
+        'idRole', 
+        'jobTitle', 
+        'datePosted', 
+        'dateApplied', 
+        'status', 
+        'description', 
+        'annualSalary', 
+        'salaryCurrency', 
+        'location', 
+        'workMode'
     ];
 
-    // Prepare the update query
-    let queryUpdateJobPosting = 
-        `UPDATE JobPostings SET 
-        idCompany = ?, 
-        idRole = ?, 
-        jobTitle = ?,
-        datePosted = ?, 
-        dateApplied = ?, 
-        status = ?,
-        description = ?,
-        annualSalary = ?,
-        salaryCurrency = ?,
-        location = ?,
-        workMode = ?
-        WHERE idPosting = ?`;
-  
-    // // Prepare the select query to get updated data
-    // let selectJobPosting = `
-    //   SELECT jp.*, c.companyName, r.role 
-    //   FROM JobPostings jp
-    //   LEFT JOIN Companies c ON jp.idCompany = c.idCompany
-    //   LEFT JOIN Roles r ON jp.idRole = r.idRole
-    //   WHERE jp.idPosting = ?`;
-  
-    // Run the update query
-    db.pool.query(queryUpdateJobPosting, values, function(error, result){
-        if (error) {
-            console.error("Database error:", error);
-            res.status(400).json({ error: error.message });
-        } else {
-            // Fetch the updated job posting
-            let selectQuery = `
-                SELECT jp.*, c.companyName, r.role 
-                FROM JobPostings jp
-                LEFT JOIN Companies c ON jp.idCompany = c.idCompany
-                LEFT JOIN Roles r ON jp.idRole = r.idRole
-                WHERE jp.idPosting = ?`;
-            
-            db.pool.query(selectQuery, [idPosting], function(error, rows) {
-                if (error) {
-                    console.error("Error fetching updated job posting:", error);
-                    res.status(400).json({ error: error.message });
-                } else {
-                    if (rows.length > 0) {
-                        console.log("Sending back updated job posting:", rows[0]);
-                        res.json(rows[0]);
-                    } else {
-                        res.status(404).json({ error: "Updated job posting not found" });
-                    }
-                }
-            });
+    fields.forEach(field => {
+        if (data[field] !== undefined) {
+            updateFields.push(`${field} = ?`);
+            values.push(data[field]);
         }
+    });
+
+    query += updateFields.join(', ') + ' WHERE idPosting = ?';
+    values.push(data.idPosting);
+
+    console.log("Prepared query:", query);
+    console.log("Prepared values:", values);
+
+    db.pool.query(query, values, function(error, result) {
+        if (error) {
+            console.error("Database error during update:", error);
+            return res.status(500).json({ error: "Database error during update", details: error.message });
+        }
+
+        console.log("Update query result:", result);
+
+        if (result.affectedRows === 0) {
+            console.warn("No rows were updated. Job posting might not exist.");
+            return res.status(404).json({ error: "Job posting not found or no changes made" });
+        }
+
+        let selectQuery = `
+            SELECT jp.*, c.companyName, r.role 
+            FROM JobPostings jp
+            LEFT JOIN Companies c ON jp.idCompany = c.idCompany
+            LEFT JOIN Roles r ON jp.idRole = r.idRole
+            WHERE jp.idPosting = ?`;
+        
+        db.pool.query(selectQuery, [data.idPosting], function(selectError, rows) {
+            if (selectError) {
+                console.error("Error fetching updated job posting:", selectError);
+                return res.status(500).json({ error: "Error fetching updated job posting", details: selectError.message });
+            }
+        
+            if (rows.length === 0) {
+                console.warn("Updated job posting not found in database");
+                return res.status(404).json({ error: "Updated job posting not found" });
+            }    
+
+            const formattedRow = {...rows[0]};
+            if (formattedRow.datePosted && isValidDate(formattedRow.datePosted)) {
+                formattedRow.datePosted = new Date(formattedRow.datePosted).toISOString().split('T')[0];
+            }
+            if (formattedRow.dateApplied && isValidDate(formattedRow.dateApplied)) {
+                formattedRow.dateApplied = new Date(formattedRow.dateApplied).toISOString().split('T')[0];
+            }
+
+            console.log("Sending back updated job posting:", JSON.stringify(formattedRow, null, 2));
+            return res.json(formattedRow);
+        });
     });
 });
 
+function adjustDateForStorage(dateString) {
+    const date = new Date(dateString + 'T00:00:00Z');
+    return date.toISOString().split('T')[0];
+}
+
+function isValidDate(dateString) {
+    const regex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!regex.test(dateString)) return false;
+    const date = new Date(dateString + 'T00:00:00');
+    return date instanceof Date && !isNaN(date);
+}
 
 module.exports = router;

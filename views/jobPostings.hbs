@@ -1,3 +1,5 @@
+{{!-- jobPostings.hbs --}}
+
 <head>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="/css/styles.css">
@@ -79,24 +81,23 @@
           {{#each data}}
           <tr data-id="{{this.idPosting}}">
               <td>{{this.idPosting}}</td>
-              <td>{{this.companyName}}</td>
-              <td>{{this.role}}</td>
-              <td>{{this.jobTitle}}</td>
-              <td>{{this.datePosted}}</td>
-              <td>{{this.dateApplied}}</td>
-              <td>{{this.status}}</td>
-              <td>{{this.description}}</td>
-              <td>{{this.annualSalary}}</td>
-              <td>{{this.salaryCurrency}}</td>
-              <td>{{this.location}}</td>
-              <td>{{this.workMode}}</td>
-              <td><button 
-                    class="btn btn-primary btn-sm" 
-                    data-bs-toggle="modal" 
-                    data-bs-target="#updateJobPostingModal" 
-                    onclick="loadJobPostingData({{this.idPosting}})">
-                    Edit
-                  </button>
+              <td class="editable" data-field="companyName">{{this.companyName}}</td>
+              <td class="editable" data-field="role">{{this.role}}</td>
+              <td class="editable" data-field="jobTitle">{{this.jobTitle}}</td>
+              <td class="editable" data-field="datePosted">{{this.datePosted}}</td>
+              <td class="editable" data-field="dateApplied">{{this.dateApplied}}</td>
+              <td class="editable" data-field="status">{{this.status}}</td>
+              <td class="editable" data-field="description">{{this.description}}</td>
+              <td class="editable" data-field="annualSalary">{{this.annualSalary}}</td>
+              <td class="editable" data-field="salaryCurrency">{{this.salaryCurrency}}</td>
+              <td class="editable" data-field="location">{{this.location}}</td>
+              <td class="editable" data-field="workMode">{{this.workMode}}</td>
+              <td>
+                <button 
+                  class="btn btn-primary btn-sm edit-job-posting" 
+                  data-id="{{this.idPosting}}">
+                  Edit
+                </button>
               </td>
               <td>
                 <button 
@@ -192,85 +193,6 @@
       </div>
     </div>
   </div>
-
-
-{{!-- Update Job Posting Modal --}}
-<div class="modal fade" id="updateJobPostingModal" tabindex="-1" aria-labelledby="updateJobPostingModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="updateJobPostingModalLabel">Update Job Posting</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <form id="update-job-posting-form-ajax">
-            <label for="input-job-title">Job Title: </label>
-            <select name="input-job-title" id="job-posting-select">
-                <option value="">Select a Job Posting</option>
-                {{#each data}}
-                <option value="{{this.idPosting}}">{{this.jobTitle}} at {{this.companyName}}</option>
-                {{/each}}
-            </select>
-
-            <label for="input-company">Company: </label>
-            <select name="input-company" id="input-company-update">
-                <option value="">Select a Company</option>
-                {{#each companies}}
-                <option value="{{this.idCompany}}">{{this.companyName}}</option>
-                {{/each}}
-            </select>
-
-            <label for="input-role">Role: </label>
-            <select name="input-role" id="input-role-update">
-                <option value="">Select a Role</option>
-                {{#each roles}}
-                <option value="{{this.idRole}}">{{this.role}}</option>
-                {{/each}}
-            </select>
-
-            <label for="input-job-title">Job Title: </label>
-            <input type="text" id="input-job-title-update" name="jobTitle">
-
-            <label for="input-date-posted">Date Posted: </label>
-            <input type="date" name="input-date-posted" id="input-date-posted-update">
-
-            <label for="input-date-applied">Date Applied: </label>
-            <input type="date" name="input-date-applied" id="input-date-applied-update">
-
-            <label for="input-status">Status: </label>
-            <select name="input-status" id="input-status-update">
-                <option value="">Select Status</option>
-                <option value="Applied">Applied</option>
-                <option value="Interviewing">Interviewing</option>
-                <option value="Offered">Offered</option>
-                <option value="Rejected">Rejected</option>
-            </select>
-
-            <label for="input-description">Description: </label>
-            <textarea name="input-description" id="input-description-update"></textarea>
-
-            <label for="input-annual-salary">Annual Salary: </label>
-            <input type="number" name="input-annual-salary" id="input-annual-salary-update" step="0.01">
-
-            <label for="input-salary-currency">Salary Currency: </label>
-            <input type="text" name="input-salary-currency" id="input-salary-currency-update">
-
-            <label for="input-location">Location: </label>
-            <input type="text" name="input-location" id="input-location-update">
-
-            <label for="input-work-mode">Work Mode: </label>
-            <input type="text" name="input-work-mode" id="input-work-mode-update">
-
-            <input type="submit" value="Update Job Posting">
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="submit" class="btn btn-primary">Update Job Posting</button>
-      </div>
-    </div>
-  </div>
-</div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/js/delete_job_posting.js"></script>

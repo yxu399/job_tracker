@@ -136,7 +136,7 @@ addRowToTable = (data) => {
         <td>${newRow.jobTitle}</td>
         <td>${newRow.datePosted}</td>
         <td>${newRow.dateApplied || 'N/A'}</td>
-        <td>${newRow.status || 'N/A'}</td>
+        <td>${newRow.status }</td>
         <td>${newRow.description || 'N/A'}</td>
         <td>${newRow.annualSalary || 'N/A'}</td>
         <td>${newRow.salaryCurrency || 'N/A'}</td>
