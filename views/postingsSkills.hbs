@@ -1,1 +1,146 @@
-=
+{{!-- -- --------------------------------------------------------------------
+-- Citation for the following file:
+-- Date: 08/04/2024
+-- Adapted from OSU-CS340-ecampus nodejs-starter-app files
+-- Templates updated for the subject database.
+-- Modified to include additional functionality, styling, and forms.
+-- Source URL: https://github.com/osu-cs340-ecampus/nodejs-starter-app
+-- -------------------------------------------------------------------- --}}
+
+{{!-- postingsSkills.hbs --}}
+
+<head>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+{{!-- NavBar --}}
+<nav class="navbar navbar-expand navbar-light" style="background-color: #e3f2fd;">
+  <div class="container-fluid">
+    <span class="navbar-brand mb-0 h1">JobTracker</span>
+    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+      <li class="nav-item">
+        <a class="nav-link" href="/">Home</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/jobPostings">Job Postings</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/companies">Companies</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/roles">Roles</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/skills">Skills</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/skillPlans">Skill Plans</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link active" aria-current="page" href="/postingsSkills">Postings Skills</a>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+{{!-- database table --}}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5>List of Postings Skills</h5>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPostingSkillModal">Add Posting's Skill</button>
+  </div>
+  <div class="table-responsive">
+    <table id="postings-skills-table" class="table table-bordered table-striped table-hover">
+      {{!-- Header section --}}
+      <thead>
+          <tr>
+              <th>ID</th>
+              <th>Job Posting</th>
+              <th>Skill</th>
+              <th>Required Proficiency</th>
+              <th>Edit</th>
+              <th>Delete</th>
+          </tr>
+      </thead>
+      {{!-- Body section --}}
+      <tbody>
+          {{#each data}}
+          <tr data-id="{{this.idPostingSkill}}">
+              <td>{{this.idPostingSkill}}</td>
+              <td class="editable" data-field="jobTitle">{{this.jobTitle}}</td>
+              <td class="editable" data-field="skillName">{{this.skillName}}</td>
+              <td class="editable" data-field="requiredProficiency">{{this.requiredProficiency}}</td>
+              <td>
+                <button 
+                  class="btn btn-primary btn-sm edit-posting-skill" 
+                  data-id="{{this.idPostingSkill}}">
+                  Edit
+                </button>
+              </td>
+              <td>
+                <button 
+                  class="btn btn-danger btn-sm delete-posting-skill"
+                  data-id="{{this.idPostingSkill}}">
+                  Delete
+                </button>
+              </td>
+          </tr>
+          {{/each}}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{{!-- Add Posting Skill Modal --}}
+<div class="modal fade" id="addPostingSkillModal" tabindex="-1" aria-labelledby="addPostingSkillModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addPostingSkillModalLabel">Add Posting Skill</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="add-posting-skill-form-ajax">
+          <div class="mb-3">
+            <label for="input-idPosting-ajax" class="form-label">Job Posting</label>
+            <select name="input-idPosting-ajax" id="input-idPosting-ajax" class="form-select" required>
+                <option value="">Select a Job Posting</option>
+                {{#each jobPostings}}
+                <option value="{{this.idPosting}}">{{this.jobTitle}}</option>
+                {{/each}}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="input-idSkill-ajax" class="form-label">Skill</label>
+            <select name="input-idSkill-ajax" id="input-idSkill-ajax" class="form-select" required>
+                <option value="">Select a Skill</option>
+                {{#each skills}}
+                <option value="{{this.idSkill}}">{{this.skillName}}</option>
+                {{/each}}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="input-requiredProficiency-ajax" class="form-label">Required Proficiency</label>
+            <select name="input-requiredProficiency-ajax" id="input-requiredProficiency-ajax" class="form-select" required>
+                <option value="">Select Proficiency</option>
+                <option value="Intermediate">Intermediate</option>
+                <option value="Advanced">Advanced</option>
+                <option value="Expert">Expert</option>
+            </select>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-primary">Add Posting Skill</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/delete_posting_skill.js"></script>
+<script src="/js/add_posting_skill.js"></script>
+<script src="/js/update_posting_skill.js"></script>
+</body>

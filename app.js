@@ -17,11 +17,8 @@ app.set('view engine', '.hbs');
 
 // Load route modules
 const jobPostingsRoutes = require('./routes/jobPostingsRoutes');
-
-// app.use((req, res, next) => {
-//     console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
-//     next();
-// });
+const companiesRoutes = require('./routes/companiesRoutes'); 
+const postingdSkillsRoutes = require('./routes/postingsSkillsRoutes');
 
 /*
     ROUTES
@@ -34,6 +31,8 @@ function setupRoutes() {
 
     // Routes to different tables
     app.use('/jobPostings', jobPostingsRoutes);
+    app.use('/companies', companiesRoutes); 
+    app.use('/postingsSkills', postingdSkillsRoutes); 
 
 
     // 404 Error handler 
