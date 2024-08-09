@@ -19,6 +19,7 @@ app.set('view engine', '.hbs');
 const jobPostingsRoutes = require('./routes/jobPostingsRoutes');
 const companiesRoutes = require('./routes/companiesRoutes'); 
 const rolesRoutes = require('./routes/rolesRoutes');
+const skillsRoutes = require('./routes/skillsRoutes');
 const skillPlansRoutes = require('./routes/skillPlansRoutes');
 const postingdSkillsRoutes = require('./routes/postingsSkillsRoutes');
 
@@ -35,6 +36,7 @@ function setupRoutes() {
     app.use('/jobPostings', jobPostingsRoutes);
     app.use('/companies', companiesRoutes);
     app.use('/roles', rolesRoutes); 
+    app.use('/skills', skillsRoutes); 
     app.use('/skillPlans', skillPlansRoutes); 
     app.use('/postingsSkills', postingdSkillsRoutes); 
 
