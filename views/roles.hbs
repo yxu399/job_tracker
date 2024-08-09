@@ -1,0 +1,114 @@
+{{!-- -- --------------------------------------------------------------------
+-- Citation for the following file:
+-- Date: 08/04/2024
+-- Adapted from OSU-CS340-ecampus nodejs-starter-app files
+-- Templates updated for the subject database.
+-- Modified to include additional functionality, styling, and forms.
+-- Source URL: https://github.com/osu-cs340-ecampus/nodejs-starter-app
+-- -------------------------------------------------------------------- --}}
+
+{{!-- roles.hbs --}}
+
+<head>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+{{!-- NavBar --}}
+<nav class="navbar navbar-expand navbar-light" style="background-color: #e3f2fd;">
+  <div class="container-fluid">
+    <span class="navbar-brand mb-0 h1">JobTracker</span>
+    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+      <li class="nav-item">
+        <a class="nav-link" href="/">Home</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/jobPostings">Job Postings</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/companies">Companies</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link active" aria-current="page" href="/roles">Roles</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/skills">Skills</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/skillPlans">Skill Plans</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/postingsSkills">Postings Skills</a>
+      </li>
+    </ul>
+  </div>
+  <form class="d-flex align-items-center" id="search-roles-html" method='GET' action='/roles'>
+  <div class="input-group me-2 flex-grow-1">
+    <input class="form-control" 
+           type="text" 
+           placeholder="Search by role" 
+           aria-label="Search" 
+           name="role" 
+           id="input-role-html-search" 
+           value="{{searchTerm}}"
+           style="min-width: 300px;">
+  </div>
+  <button class="btn btn-outline-success me-2" type="submit">Search</button>
+  <a href='/roles' class="btn btn-outline-success">Reset</a>
+</form>
+</nav>
+
+{{!-- database table---------------------------------------------------------------------------------------------------- --}}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5>List of Roles</h5>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addRoleModal">Add Role</button>
+  </div>
+  <div class="table-responsive">
+    <table id="roles-table" class="table table-bordered table-striped table-hover">
+      {{!-- Header section --}}
+      <thead>
+          <tr>
+              <th>ID</th>
+              <th>Role</th>
+          </tr>
+      </thead>
+      {{!-- Body section --}}
+      <tbody>
+          {{#each data}}
+          <tr data-id="{{this.idRole}}">
+              <td>{{this.idRole}}</td>
+              <td>{{this.role}}</td>
+          </tr>
+          {{/each}}
+      </tbody>
+    </table>
+    </div>
+</div>
+
+  {{!-- Add Role Modal --}}
+  <div class="modal fade" id="addRoleModal" tabindex="-1" aria-labelledby="addRoleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addRoleModalLabel">Add Role</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="add-role-form-ajax">
+            <div class="mb-3">
+              <label for="input-role-ajax" class="form-label">Role</label>
+              <input type="text" name="input-role-ajax" id="input-role-ajax" class="form-control" required>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              <button type="submit" class="btn btn-primary">Add Role</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/add_role.js"></script>

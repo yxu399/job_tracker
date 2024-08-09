@@ -1,5 +1,5 @@
 
-// jobPostingsRoutes.js
+// server-side script: jobPostingsRoutes.js
 
 const express = require('express');
 const router = express.Router();
@@ -74,18 +74,6 @@ router.get('/', function(req, res) {
                     return;
                 }
                 
-                // // convert date format Month name DD YYY
-                // const formatDate = (dateString) => {
-                //     const date = new Date(dateString);
-                //     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-                // };
-                
-                // // query callback:
-                // jobPostings = jobPostings.map(posting => ({
-                //     ...posting,
-                //     datePosted: formatDate(posting.datePosted),
-                //     dateApplied: formatDate(posting.dateApplied)
-                // }));
                 console.log("Job Postings:", jobPostings);
                 res.render('jobPostings', {
                     data: jobPostings, 

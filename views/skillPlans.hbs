@@ -1,0 +1,172 @@
+{{!-- -- --------------------------------------------------------------------
+-- Citation for the following file:
+-- Date: 08/04/2024
+-- Adapted from OSU-CS340-ecampus nodejs-starter-app files
+-- Templates updated for the subject database.
+-- Modified to include additional functionality, styling, and forms.
+-- Source URL: https://github.com/osu-cs340-ecampus/nodejs-starter-app
+-- -------------------------------------------------------------------- --}}
+
+{{!-- skillPlans.hbs --}}
+
+<head>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+{{!-- NavBar --}}
+<nav class="navbar navbar-expand navbar-light" style="background-color: #e3f2fd;">
+  <div class="container-fluid">
+    <span class="navbar-brand mb-0 h1">JobTracker</span>
+    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+      <li class="nav-item">
+        <a class="nav-link" href="/">Home</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/jobPostings">Job Postings</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/companies">Companies</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/roles">Roles</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/skills">Skills</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link active" aria-current="page" href="/skillPlans">Skill Plans</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/postingsSkills">Postings Skills</a>
+      </li>
+    </ul>
+  </div>
+  <form class="d-flex align-items-center" id="search-skill-plan-html" method='GET' action='/skillPlans'>
+  <div class="input-group me-2 flex-grow-1">
+    <input class="form-control" 
+           type="text" 
+           placeholder="Search by skill plan" 
+           aria-label="Search" 
+           name="description" 
+           id="input-description-html-search" 
+           value="{{searchTerm}}"
+           style="min-width: 300px;">
+  </div>
+  <button class="btn btn-outline-success me-2" type="submit">Search</button>
+  <a href='/skillPlans' class="btn btn-outline-success">Reset</a>
+</form>
+</nav>
+
+{{!-- database table---------------------------------------------------------------------------------------------------- --}}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5>List of Skill Plans</h5>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSkillPlanModal">Add Skill Plan</button>
+  </div>
+  <div class="table-responsive">
+    <table id="skill-plans-table" class="table table-bordered table-striped table-hover">
+      {{!-- Header section --}}
+      <thead>
+          <tr>
+              <th>ID</th>
+              <th>Skill</th>
+              <th>Description</th>
+              <th>Source</th>
+              <th>Start Date</th>
+              <th>End Date</th>
+              <th>Cost</th>
+              <th>Note</th>
+              <th>Edit</th>
+          </tr>
+      </thead>
+      {{!-- Body section --}}
+      <tbody>
+          {{#each data}}
+          <tr data-id="{{this.idPlan}}">
+            <td>{{this.idPlan}}</td>
+            <td class="editable" data-field="skillName">{{this.skillName}}</td>
+            <td class="editable" data-field="description">{{this.description}}</td>
+            <td class="editable" data-field="source">{{this.source}}</td>
+            <td class="editable" data-field="startDate">{{this.startDate}}</td>
+            <td class="editable" data-field="endDate">{{this.endDate}}</td>
+            <td class="editable" data-field="cost">{{this.cost}}</td>
+            <td class="editable" data-field="note">{{this.note}}</td>
+            <td>
+                <button 
+                    class="btn btn-primary btn-sm edit-skill-plan" 
+                    data-id="{{this.idPlan}}">
+                    Edit
+                </button>
+            </td>
+            <td>
+                <button 
+                    class="btn btn-danger btn-sm delete-skill-plan" 
+                    data-id="{{this.idPlan}}">
+                    Delete
+                </button>
+            </td>
+          </tr>
+          {{/each}}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+  {{!-- Add Skill Plan Modal --}}
+  <div class="modal fade" id="addSkillPlanModal" tabindex="-1" aria-labelledby="addSkillPlanModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addSkillPlanModalLabel">Add Skill Plan</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="add-skill-plan-form-ajax">
+            <div class="mb-3">
+              <label for="input-idSkill-ajax" class="form-label">Skill</label>
+              <select name="input-idSkill-ajax" id="input-idSkill-ajax" class="form-select" required>
+                  <option value="">Select a Skill</option>
+                  {{#each skills}}
+                  <option value="{{this.idSkill}}">{{this.skillName}}</option>
+                  {{/each}}
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="input-description-ajax" class="form-label">Description</label>
+              <input type="text" name="input-description-ajax" id="input-description-ajax" class="form-control">
+            </div>
+            <div class="mb-3">
+              <label for="input-source-ajax" class="form-label">Source</label>
+              <input type="text" name="input-source-ajax" id="input-source-ajax" class="form-control">
+            </div>
+            <div class="mb-3">
+              <label for="input-startDate-ajax" class="form-label">Start Date</label>
+              <input type="date" name="input-startDate-ajax" id="input-startDate-ajax" class="form-control">
+            </div>
+            <div class="mb-3">
+              <label for="input-endDate-ajax" class="form-label">End Date</label>
+              <input type="date" name="input-endDate-ajax" id="input-endDate-ajax" class="form-control">
+            </div>
+            <div class="mb-3">
+              <label for="input-cost-ajax" class="form-label">Cost</label>
+              <input type="number" step="0.01" name="input-cost-ajax" id="input-cost-ajax" class="form-control">
+            </div>
+            <div class="mb-3">
+              <label for="input-note-ajax" class="form-label">Note</label>
+              <textarea name="input-note-ajax" id="input-note-ajax" class="form-control"></textarea>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              <button type="submit" class="btn btn-primary">Add Skill Plan</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/add_skill_plan.js"></script>
+<script src="/js/update_skill_plan.js"></script>
+<script src="/js/delete_skill_plan.js"></script>

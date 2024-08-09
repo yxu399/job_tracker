@@ -1,4 +1,4 @@
-// add_job_posting.jx
+// add_job_posting.js
 
 // Get the objects we need to modify
 let addJobPostingForm = document.getElementById('add-job-posting-form-ajax');
@@ -142,7 +142,14 @@ addRowToTable = (data) => {
         <td>${newRow.salaryCurrency || 'N/A'}</td>
         <td>${newRow.location || 'N/A'}</td>
         <td>${newRow.workMode || 'N/A'}</td>
-        <td><button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#updateJobPostingModal" onclick="loadJobPostingData(${newRow.idPosting})">Edit</button></td>
+        <td>
+            <button class="btn btn-primary btn-sm" 
+                data-bs-toggle="modal" 
+                data-bs-target="#updateJobPostingModal" 
+                onclick="loadJobPostingData(${newRow.idPosting})">
+                Edit
+                </button>
+        </td>
         <td>
             <button 
                 class="btn btn-danger btn-sm delete-job-posting" 
