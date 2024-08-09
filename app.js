@@ -18,6 +18,8 @@ app.set('view engine', '.hbs');
 // Load route modules
 const jobPostingsRoutes = require('./routes/jobPostingsRoutes');
 const companiesRoutes = require('./routes/companiesRoutes'); 
+const rolesRoutes = require('./routes/rolesRoutes');
+const skillPlansRoutes = require('./routes/skillPlansRoutes');
 const postingdSkillsRoutes = require('./routes/postingsSkillsRoutes');
 
 /*
@@ -31,7 +33,9 @@ function setupRoutes() {
 
     // Routes to different tables
     app.use('/jobPostings', jobPostingsRoutes);
-    app.use('/companies', companiesRoutes); 
+    app.use('/companies', companiesRoutes);
+    app.use('/roles', rolesRoutes); 
+    app.use('/skillPlans', skillPlansRoutes); 
     app.use('/postingsSkills', postingdSkillsRoutes); 
 
 
