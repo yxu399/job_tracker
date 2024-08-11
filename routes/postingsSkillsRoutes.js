@@ -5,48 +5,62 @@ const router = express.Router();
 const db = require('../database/db-connector');
 
 router.get('/', function(req, res) {
-    // Query to get all PostingsSkills with related information
-    let query1 = `
+    console.log("GET / route hit");
+    console.log("Search term:", req.query.search);
+
+    let baseQuery = `
         SELECT ps.idPostingSkill, jp.jobTitle, s.skillName, ps.requiredProficiency
         FROM PostingsSkills ps
         JOIN JobPostings jp ON ps.idPosting = jp.idPosting
-        JOIN Skills s ON ps.idSkill = s.idSkill;
+        JOIN Skills s ON ps.idSkill = s.idSkill
     `;
 
-    // Query to get all JobPostings for the dropdown
-    let query2 = "SELECT idPosting, jobTitle FROM JobPostings;";
+    let whereClause = '';
+    let queryParams = [];
 
-    // Query to get all Skills for the dropdown
+    if (req.query.search) {
+        console.log("Search term detected, modifying query");
+        whereClause = ' WHERE jp.jobTitle LIKE ? OR s.skillName LIKE ?';
+        queryParams = [`%${req.query.search}%`, `%${req.query.search}%`];
+    }
+
+    let query1 = baseQuery + whereClause;
+    console.log("Final query:", query1);
+    console.log("Query parameters:", queryParams);
+
+    let query2 = "SELECT idPosting, jobTitle FROM JobPostings;";
     let query3 = "SELECT idSkill, skillName FROM Skills;";
 
-    // Run the 1st query
-    db.pool.query(query1, function(error, postingsSkills, fields) {
+    db.pool.query(query1, queryParams, function(error, postingsSkills, fields) {
         if (error) {
-            console.log(error);
+            console.error("Error in first query:", error);
             res.sendStatus(500);
             return;
         }
+        console.log("First query successful. Results:", postingsSkills.length);
 
-        // Run the second query
         db.pool.query(query2, (error, jobPostings, fields) => {
             if (error) {
-                console.log(error);
+                console.error("Error in second query:", error);
                 res.sendStatus(500);
                 return;
             }
+            console.log("Second query successful. Results:", jobPostings.length);
             
-            // Run the third query
             db.pool.query(query3, (error, skills, fields) => {
                 if (error) {
-                    console.log(error);
+                    console.error("Error in third query:", error);
                     res.sendStatus(500);
                     return;
                 }
+                console.log("Third query successful. Results:", skills.length);
                 
+                console.log("Rendering postingsSkills view");
                 res.render('postingsSkills', {
                     data: postingsSkills, 
                     jobPostings: jobPostings,
-                    skills: skills
+                    skills: skills,
+                    searchTerm: req.query.search
                 });
             });
         });

@@ -1,3 +1,12 @@
+// -- --------------------------------------------------------------------
+// -- Citation for the following file:
+// -- Date: 08/04/2024
+// -- Adapted from OSU-CS340-ecampus nodejs-starter-app files
+// -- Templates updated for the subject database.
+// -- Modified to include additional functionality, styling, and forms.
+// -- Source URL: https://github.com/osu-cs340-ecampus/nodejs-starter-app
+// -- --------------------------------------------------------------------
+
 // add_job_posting.js
 
 // Get the objects we need to modify
@@ -57,12 +66,12 @@ addJobPostingForm.addEventListener("submit", function (e) {
     // Put our data we want to send in a javascript object
     let data = {
         idCompany: companyValue,
-        idRole: roleValue ? roleValue : null,  
+        idRole: roleValue === "" ? null : roleValue,
         jobTitle: jobTitleValue,
         datePosted: datePostedValue || null,
         dateApplied: dateAppliedValue || null,
-        status: statusValue,
-        description: descriptionValue,
+        status: statusValue || null,
+        description: descriptionValue || null,
         annualSalary: annualSalaryValue || null,
         salaryCurrency: salaryCurrencyValue || null,
         location: locationValue || null,

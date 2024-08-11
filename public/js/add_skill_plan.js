@@ -7,7 +7,7 @@
 // -- Source URL: https://github.com/osu-cs340-ecampus/nodejs-starter-app
 // -- --------------------------------------------------------------------
 
-// add_skill_plan.jx
+// add_skill_plan.js
 
 // Get the objects we need to modify
 let addSkillPlanForm = document.getElementById('add-skill-plan-form-ajax');

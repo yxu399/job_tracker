@@ -87,6 +87,7 @@ router.get('/', function(req, res) {
 });
 
 function formatDateToDisplay(dateString) {
+    if (!dateString) return ''; // Handle null dates
     const date = new Date(dateString);
     const month = ('0' + (date.getMonth() + 1)).slice(-2);
     const day = ('0' + date.getDate()).slice(-2);
@@ -124,10 +125,6 @@ router.post('/add-job-posting-ajax', function(req, res)
     // Capture the incoming data and parse it back to a JS object
     let data = req.body;
 
-    // Log the incoming data for debugging
-     console.log('Received data:', data);
-
-    // Capture NULL values
     let idCompany = parseInt(data.idCompany); 
     // Validate required fields
     if (isNaN(idCompany)) {
@@ -136,7 +133,7 @@ router.post('/add-job-posting-ajax', function(req, res)
     }
 
     // Handle idRole: if it's an empty string or not provided, set it to NULL
-    let idRole = data.idRole && data.idRole.trim() !== '' ? parseInt(data.idRole) : null;
+    let idRole = data.idRole && data.idRole.trim() !== '' && data.idRole !== 'null' ? parseInt(data.idRole) : null;
 
     let annualSalary = data.annualSalary && data.annualSalary.trim() !== '' ? parseFloat(data.annualSalary) : null;
 
@@ -234,14 +231,15 @@ router.put('/put-job-posting-ajax', function(req, res, next) {
     console.log("Received PUT request with data:", JSON.stringify(data, null, 2));
 
     const dateFields = ['datePosted', 'dateApplied'];
-    for (const field of dateFields) {
-        if (data[field] && !isValidDate(data[field])) {
+    dateFields.forEach(field => {
+        if (data[field] === '' || data[field] === null || data[field] === undefined) {
+            data[field] = null; // Set blank dates to NULL
+        } else if (data[field] && !isValidDate(data[field])) {
             return res.status(400).json({ error: `Invalid date format for ${field}. Expected YYYY-MM-DD.` });
-        }
-        if (data[field]) {
+        } else {
             data[field] = adjustDateForStorage(data[field]);
         }
-    }
+});
 
     let updateFields = [];
     let values = [];
@@ -262,7 +260,14 @@ router.put('/put-job-posting-ajax', function(req, res, next) {
     ];
 
     fields.forEach(field => {
-        if (data[field] !== undefined) {
+        if (field === 'idRole' || field === 'annualSalary') {
+            if (data[field] === null || data[field] === 'null' || data[field] === '') {
+                updateFields.push(`${field} = NULL`);
+            } else {
+                updateFields.push(`${field} = ?`);
+                values.push(field === 'annualSalary' ? parseFloat(data[field]) : parseInt(data[field]));
+            }
+        } else if (data[field] !== undefined) {
             updateFields.push(`${field} = ?`);
             values.push(data[field]);
         }
@@ -306,13 +311,9 @@ router.put('/put-job-posting-ajax', function(req, res, next) {
             }    
 
             const formattedRow = {...rows[0]};
-            if (formattedRow.datePosted && isValidDate(formattedRow.datePosted)) {
-                formattedRow.datePosted = new Date(formattedRow.datePosted).toISOString().split('T')[0];
-            }
-            if (formattedRow.dateApplied && isValidDate(formattedRow.dateApplied)) {
-                formattedRow.dateApplied = new Date(formattedRow.dateApplied).toISOString().split('T')[0];
-            }
-
+            formattedRow.datePosted = formattedRow.datePosted ? new Date(formattedRow.datePosted).toISOString().split('T')[0] : '';
+            formattedRow.dateApplied = formattedRow.dateApplied ? new Date(formattedRow.dateApplied).toISOString().split('T')[0] : '';
+        
             console.log("Sending back updated job posting:", JSON.stringify(formattedRow, null, 2));
             return res.json(formattedRow);
         });
@@ -320,6 +321,7 @@ router.put('/put-job-posting-ajax', function(req, res, next) {
 });
 
 function adjustDateForStorage(dateString) {
+    if (!dateString) return null; // Handle null dates
     const date = new Date(dateString + 'T00:00:00Z');
     return date.toISOString().split('T')[0];
 }

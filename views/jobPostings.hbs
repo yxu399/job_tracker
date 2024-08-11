@@ -71,7 +71,7 @@
           <tr>
               <th>ID</th>
               <th>Company</th>
-              <th>Role</th>
+              <th>Role (Optional)</th>
               <th>Job Title</th>
               <th>Date Posted</th>
               <th>Date Applied</th>
@@ -91,7 +91,7 @@
           <tr data-id="{{this.idPosting}}">
               <td>{{this.idPosting}}</td>
               <td class="editable" data-field="companyName">{{this.companyName}}</td>
-              <td class="editable" data-field="role">{{this.role}}</td>
+              <td class="editable" data-field="role">{{#if this.role}}{{this.role}}{{else}}N/A{{/if}}</td>                
               <td class="editable" data-field="jobTitle">{{this.jobTitle}}</td>
               <td class="editable" data-field="datePosted">{{this.datePosted}}</td>
               <td class="editable" data-field="dateApplied">{{this.dateApplied}}</td>
@@ -142,13 +142,14 @@
               </select>
             </div>
             <div class="mb-3">
-              <label for="input-idRole-ajax" class="form-label">Role</label>
+              <label for="input-idRole-ajax" class="form-label">Role (Optional)</label>
               <select name="input-idRole-ajax" id="input-idRole-ajax" class="form-select">
-                  <option value="">Select a Role (Optional)</option>
+                  <option value="">No Role / Unspecified</option>
                   {{#each roles}}
                   <option value="{{this.idRole}}">{{this.role}}</option>
                   {{/each}}
               </select>
+              <small class="form-text text-muted">Leave as 'No Role / Unspecified' if the role is not defined.</small>
             </div>
             <div class="mb-3">
               <label for="input-jobTitle-ajax" class="form-label">Job Title</label>
@@ -164,7 +165,7 @@
             </div>
             <div class="mb-3">
               <label for="input-status-ajax" class="form-label">Status</label>
-              <select name="input-status-ajax" id="input-status-ajax" class="form-select" required>
+              <select name="input-status-ajax" id="input-status-ajax" class="form-select">
                   <option value="">Select Status</option>
                   <option value="Under Review">Under Review</option>
                   <option value="Interview Scheduled">Interview Scheduled</option>

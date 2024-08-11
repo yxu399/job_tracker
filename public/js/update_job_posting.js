@@ -25,11 +25,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function loadData() {
         return Promise.all([
-            fetch('/jobPostings/get-companies').then(res => res.json()),
-            fetch('/jobPostings/get-roles').then(res => res.json())
+            fetch('/jobPostings/get-companies').then(res => {
+                if (!res.ok) throw new Error('Failed to fetch companies');
+                return res.json();
+            }),
+            fetch('/jobPostings/get-roles').then(res => {
+                if (!res.ok) throw new Error('Failed to fetch roles');
+                return res.json();
+            })
         ]).then(([fetchedCompanies, fetchedRoles]) => {
             companies = fetchedCompanies;
             roles = fetchedRoles;
+        }).catch(error => {
+            console.error('Error loading data:', error);
+            alert('Failed to load necessary data. Please refresh the page and try again.');
         });
     }
 
@@ -65,7 +74,7 @@ document.addEventListener('DOMContentLoaded', function() {
             cell.appendChild(input);
         });
     }
-
+    
     function createInputField(field, value) {
         let input;
         switch(field) {
@@ -84,7 +93,7 @@ document.addEventListener('DOMContentLoaded', function() {
             case 'dateApplied':
                 input = document.createElement('input');
                 input.type = 'date';
-                input.value = formatDateForInput(value);
+                input.value = value ? formatDateForInput(value) : '';  
                 break;
             case 'status':
                 input = createStatusDropdown(value);
@@ -99,8 +108,20 @@ document.addEventListener('DOMContentLoaded', function() {
         return input;
     }
 
+    function formatDateForInput(dateString) {
+        // Ensure the date is in the correct format for the <input type="date">
+        const parts = dateString.split('/');
+        return `${parts[2]}-${('0' + parts[0]).slice(-2)}-${('0' + parts[1]).slice(-2)}`;
+    }
+    
     function createDropdown(items, valueField, textField, currentValue) {
         const select = document.createElement('select');
+        if (textField === 'role') {
+            const noRoleOption = document.createElement('option');
+            noRoleOption.value = '';  // Change this to empty string
+            noRoleOption.textContent = 'No Role / Unspecified';
+            select.appendChild(noRoleOption);
+        }
         items.forEach(item => {
             const option = document.createElement('option');
             option.value = item[valueField];
@@ -110,6 +131,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             select.appendChild(option);
         });
+        if ((currentValue === null || currentValue === undefined) && textField === 'role') {
+            select.value = '';
+        }
         return select;
     }
 
@@ -130,11 +154,22 @@ document.addEventListener('DOMContentLoaded', function() {
         row.querySelectorAll('.editable').forEach(cell => {
             const field = cell.getAttribute('data-field');
             const input = cell.firstChild;
-            updatedData[field] = input.type === 'select-one' ? input.options[input.selectedIndex].text : input.value;
-            if (field === 'companyName') updatedData['idCompany'] = input.value;
-            if (field === 'role') updatedData['idRole'] = input.value;
+            if (field === 'role') {
+                updatedData['idRole'] = input.value === '' ? null : input.value;
+                updatedData[field] = input.value === '' ? null : input.options[input.selectedIndex].text;
+            } else if (field === 'annualSalary') {
+                updatedData[field] = input.value.trim() === '' ? null : input.value;
+            } else {
+                updatedData[field] = input.type === 'select-one' ? input.options[input.selectedIndex].text : input.value;
+                if (field === 'companyName') updatedData['idCompany'] = input.value;
+            }
         });
-
+    
+        // Ensure idRole is always included in the updatedData
+        if (!('idRole' in updatedData)) {
+            updatedData['idRole'] = null;
+        }
+    
         const id = row.getAttribute('data-id');
         return updateJobPosting(id, formatDataForUpdate(updatedData));
     }
@@ -143,53 +178,57 @@ document.addEventListener('DOMContentLoaded', function() {
         row.querySelectorAll('.editable').forEach(cell => {
             const field = cell.getAttribute('data-field');
             if (field in updatedJobPosting) {
-                cell.textContent = ['datePosted', 'dateApplied'].includes(field) 
-                    ? formatDateToDisplay(new Date(updatedJobPosting[field])) 
-                    : updatedJobPosting[field];
+                if (['datePosted', 'dateApplied'].includes(field)) {
+                    cell.textContent = updatedJobPosting[field] ? formatDateToDisplay(updatedJobPosting[field]) : '';
+                } else if (field === 'role') {
+                    cell.textContent = updatedJobPosting[field] || 'N/A';
+                } else if (field === 'annualSalary') {
+                    cell.textContent = updatedJobPosting[field] !== null ? updatedJobPosting[field] : '';
+                } else {
+                    cell.textContent = updatedJobPosting[field] !== null ? updatedJobPosting[field] : '';
+                }
             }
         });
     }
-
-    function formatDataForUpdate(data) {
-        const formatted = { ...data };
-        if (formatted.datePosted) formatted.datePosted = formatDate(formatted.datePosted);
-        if (formatted.dateApplied) formatted.dateApplied = formatDate(formatted.dateApplied);
-        ['idCompany', 'idRole', 'annualSalary'].forEach(field => {
-            if (formatted[field]) formatted[field] = Number(formatted[field]);
-        });
-        return formatted;
-    }
-
-    function formatDate(dateString) {
-        const date = new Date(dateString + 'T00:00:00');
-        if (!isNaN(date)) {
-            return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().split('T')[0];
-        }
-        return '';
+    
+    function formatDateToDisplay(dateString) {
+        if (!dateString) return '';
+        const parts = dateString.split('-');
+        return `${parts[1]}/${parts[2]}/${parts[0]}`; // Convert YYYY-MM-DD to MM/DD/YYYY
     }
     
 
-    function formatDateForInput(dateString) {
-        const date = new Date(dateString);
-        return !isNaN(date) ? new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().split('T')[0] : '';
+    function formatDataForUpdate(data) {
+        const formatted = { ...data };
+        formatted.datePosted = formatDateForStorage(data.datePosted);
+        formatted.dateApplied = formatDateForStorage(data.dateApplied);
+        if (formatted.idCompany) formatted.idCompany = Number(formatted.idCompany);
+        formatted.idRole = formatted.idRole === 'null' || formatted.idRole === '' ? null : (formatted.idRole ? Number(formatted.idRole) : null);
+        
+        // Handle annualSalary
+        if (formatted.annualSalary === '' || formatted.annualSalary === null) {
+            formatted.annualSalary = null;
+        } else if (formatted.annualSalary !== undefined) {
+            formatted.annualSalary = Number(formatted.annualSalary);
+        }
+    
+        return formatted;
     }
 
-    function formatDateToDisplay(date) {
-        return `${('0' + (date.getMonth() + 1)).slice(-2)}/${('0' + date.getDate()).slice(-2)}/${date.getFullYear()}`;
-    }
+    function formatDateForStorage(dateString) {
+        // Return the date string as-is without any manipulation
+        return dateString;
+    }    
 
     function updateJobPosting(id, updatedData) {
-        const changedData = Object.entries(updatedData).reduce((acc, [key, value]) => {
-            if (value !== null && value !== undefined && value !== '') acc[key] = value;
-            return acc;
-        }, {});
-
+        const changedData = { ...updatedData, idPosting: id };
+    
         return fetch(`/jobPostings/put-job-posting-ajax`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ idPosting: id, ...changedData }),
+            body: JSON.stringify(changedData),
         })
         .then(response => {
             if (!response.ok) throw new Error('Network response was not ok');

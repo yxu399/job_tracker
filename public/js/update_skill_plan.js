@@ -1,3 +1,5 @@
+// update_skill_plan.js
+
 let skills = [];
 let dataLoaded = false;
 
@@ -78,7 +80,7 @@ document.addEventListener('DOMContentLoaded', function() {
             case 'endDate':
                 input = document.createElement('input');
                 input.type = 'date';
-                input.value = value ? formatDateForInput(value) : '';  // Format the date for input field
+                input.value = value ? formatDateForInput(value) : '';  
                 break;
             case 'source':
             case 'note':

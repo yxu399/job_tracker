@@ -123,6 +123,54 @@
     </div>
   </div>
 
+  <hr class="separator">
+
+  <div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5>List of Tables in JobTracker</h5>
+  </div>
+  <div class="table-responsive">
+    <table id="jobtracker-tables" class="table table-bordered table-striped table-hover">
+      {{!-- Header section --}}
+      <thead>
+          <tr>
+              <th>Table Name</th>
+              <th>Description</th>
+          </tr>
+      </thead>
+      {{!-- Body section --}}
+      <tbody>
+        <tr>
+          <td>Job Postings</td>
+          <td>Records details of job postings and applications</td>
+        </tr>
+        <tr>
+          <td>Companies</td>
+          <td>Records details of companies making job postings, supports data normalization of company entries</td>
+        </tr>
+        <tr>
+          <td>Roles</td>
+          <td>Records details of general role categories, supports data normalization of generalized roles</td>
+        </tr>
+        <tr>
+          <td>Skills</td>
+          <td>Records details of skills or qualifications that may be listed in job postings or held by applicant, including previous work experience held by user</td>
+        </tr>
+        <tr>
+          <td>Skill Plans</td>
+          <td>Records details of a candidate's plan to acquire or improve specific skills</td>
+        </tr>
+        <tr>
+          <td>Posting Skills</td>
+          <td>Intersection table for M:N relationship between JobPostings and Skills. Records details of the specific skills for a specific job posting</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<hr class="separator">
+
 <footer class="footer mt-auto py-3 bg-light text-center">
     <div class="container">
       <span class="text-muted">© 2024 Group 19 - Emily Ramage and Yingjuan Xu. All rights reserved.</span>

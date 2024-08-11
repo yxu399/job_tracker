@@ -42,6 +42,20 @@
       </li>
     </ul>
   </div>
+  <form class="d-flex align-items-center" id="search-postings-skills-html" method='GET' action='/postingsSkills'>
+  <div class="input-group me-2 flex-grow-1">
+    <input class="form-control" 
+           type="text" 
+           placeholder="Search by job posting or skill" 
+           aria-label="Search" 
+           name="search" 
+           id="input-postings-skill-html-search" 
+           value="{{searchTerm}}"
+           style="min-width: 300px;">
+  </div>
+  <button class="btn btn-outline-success me-2" type="submit">Search</button>
+  <a href='/postingsSkills' class="btn btn-outline-success">Reset</a>
+</form>
 </nav>
 
 {{!-- database table --}}

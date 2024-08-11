@@ -21,7 +21,7 @@ const companiesRoutes = require('./routes/companiesRoutes');
 const rolesRoutes = require('./routes/rolesRoutes');
 const skillsRoutes = require('./routes/skillsRoutes');
 const skillPlansRoutes = require('./routes/skillPlansRoutes');
-const postingdSkillsRoutes = require('./routes/postingsSkillsRoutes');
+const postingsSkillsRoutes = require('./routes/postingsSkillsRoutes');
 
 /*
     ROUTES
@@ -38,7 +38,7 @@ function setupRoutes() {
     app.use('/roles', rolesRoutes); 
     app.use('/skills', skillsRoutes); 
     app.use('/skillPlans', skillPlansRoutes); 
-    app.use('/postingsSkills', postingdSkillsRoutes); 
+    app.use('/postingsSkills', postingsSkillsRoutes);
 
 
     // 404 Error handler 

@@ -44,6 +44,12 @@
     text-align: left;
   }
 
+  .separator {
+    height: 0.5px;
+    background-color: #ccc;
+    margin: 50px;
+}
+
 .footer {
     position: fixed;
     /* margin-top: 3rem; */

@@ -211,7 +211,7 @@ router.put('/put-skill-plan-ajax', function(req, res, next) {
         'description', 
         'source', 
         'startDate', 
-        'endDate',  // Both startDate and endDate are included here
+        'endDate',  
         'cost', 
         'note'
     ];
