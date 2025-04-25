@@ -4,10 +4,10 @@ var mysql = require('mysql')
 // Create a 'connection pool' using the provided credentials
 var pool = mysql.createPool({
     connectionLimit : 10,
-    host            : 'classmysql.engr.oregonstate.edu',
-    user            : 'cs340_xuying',
-    password        : '6770',
-    database        : 'cs340_xuying'
+    host            : 'host',
+    user            : 'user',
+    password        : 'password',
+    database        : 'user'
 })
 
 // Export it for use in our application
